@@ -651,33 +651,6 @@
   
   
   <entry>
-    <title>tcp头后半段的那些选项</title>
-    <link href="/ad7e6196/"/>
-    <url>/ad7e6196/</url>
-    
-    <content type="html"><![CDATA[<ul><li>EOL &amp; NOP;</li><li>MSS;</li><li>WSOPT;</li><li>SACK;</li></ul><span id="more"></span><h2 id="前言"><a class="markdownIt-Anchor" href="#前言"></a> 前言</h2><p>众所周知,TCP的头部有一个字段<code>Data offset</code>,表示数据从哪个位置开始.</p><p>也就是说在<code>offset</code>之前的信息,都是tcp的头部及其填充(因为<code>offset</code>的单位是4字节,头部大小不为4字节的倍数时需要填充到4字节的倍数).</p><p>这个<code>offset</code>有4位,可以表达0-15的大小,也就是头的长度最多是60.</p><p>前20个字节都已经确定.后面40个字节可以放置TL结构的选项.</p><table><thead><tr><th>type</th><th>length</th><th>value</th></tr></thead><tbody><tr><td>1 byte</td><td>1 byte</td><td>length byte</td></tr></tbody></table><p>我很长一段时间里面都无视了这个东西的作用,今天心血来潮想要了解和整理一下.</p><p>主要选项有</p><table><thead><tr><th>type</th><th>length</th><th>简称</th><th>描述</th></tr></thead><tbody><tr><td>0</td><td>1</td><td>EOL</td><td>选项列表结束</td></tr><tr><td>1</td><td>1</td><td>NOP</td><td>无操作</td></tr><tr><td>2</td><td>4</td><td>MSS</td><td>最大Segmegnt长度</td></tr><tr><td>3</td><td>3</td><td>WSOPT</td><td>窗口扩大系数</td></tr><tr><td>4</td><td>2</td><td>SACK-Permitted</td><td>表示支持SACK</td></tr><tr><td>5</td><td>mutable</td><td>SACK</td><td>确认区间</td></tr><tr><td>8</td><td>10</td><td>TSOPT</td><td>Timestamps</td></tr><tr><td>19</td><td>18</td><td>TCP-MD5</td><td>MD5认证</td></tr><tr><td>28</td><td>mutable</td><td>UTO</td><td>超过一定时间后拆除连接</td></tr></tbody></table><h2 id="eol和nop"><a class="markdownIt-Anchor" href="#eol和nop"></a> EOL和NOP</h2><p>这里的<code>length</code>,是包括<code>type</code>和<code>lenght</code>本身的长度的.</p><p>也就是如果<code>length</code>为<code>4</code>,那么留给<code>value</code>的空间只有<code>2</code>字节了.</p><p>那么只有一个字节长度的<code>EOL</code>和<code>NOP</code>,是什么情况?</p><p>他们是把<code>length</code>字段也省略了,只有一个<code>type</code>.</p><p><code>EOL</code>的作用是放在tcp头的最后一个选项后面,以表示选项已经结束.</p><p>那么就会有人疑问,直接根据tcp头的长度字段来指出结束位置不就好了吗,为什么还需要一个<code>EOL</code>.</p><p>那是因为tcp头不一定刚好在<code>4</code>字节的整数倍的位置结束,在这种情况下需要一个<code>EOL</code>来表示后续数据都是填充的<code>0</code>.</p><p>如果tcp头的长度刚好为4字节的倍数,那么就不需要EOL.</p><p><code>NOP</code>则是可以用在选项之间或结尾的填充位,比如<code>WSOPT</code>选项长度为<code>3</code>,有的机器可能会补一个<code>NOP</code>来让他<code>4</code>字节对齐.</p><h2 id="mss"><a class="markdownIt-Anchor" href="#mss"></a> MSS</h2><table><thead><tr><th>type</th><th>length</th><th>value</th></tr></thead><tbody><tr><td>0x02</td><td>0x04</td><td>长度</td></tr></tbody></table><p>Maximum segment size(MSS)是TCP期望从对端接收的最大的报文长度，自然也是对端在发送报文的时候的最大报文长度，注意MSS值仅指示TCP数据长度，并不包含关联的TCP头和IP头的长度。当连接在建立的时候，每个endpoint通常会在对应的SYN包中通过MSS option通告对方自己的MSS，按照RFC1122规定如果没有MSS选项提供则会使用默认的536bytes作为MSS(注意原始的RFC793协议是说没有提供MSS选项的时候可以发送任意大小的包，RFC1122修正了该说法)。还有一点需要注意由于目前网卡普遍支持TSO、GSO功能，在开启这些功能的前提下，协议栈中的TCP层可能会按照MSS的整数倍发包，然后再由网卡硬件来对TCP分段，这样减轻了CPU的处理压力。后面为了方便讨论窗口管理等特性，我们还是按照TCP层最大包不超过MSS来讨论。</p><p>在IPV6的jumbogram中(RFC2675)，如果接收端接收到的MSS值为65535时候，标识真实的MSS需要根据PMTU值来确定。即MSS=PMTU-60。(jumbogram是IPV6中一种发送超大IP报文的协议特性，PMTU是接收端和发送端链路之间所有设备的最小MTU。)</p><p>RFC6691重新澄清了MSS选项的相关说明，并修正了之前几个RFC的错误说法。RFC6691明确规定在MSS选项中传递的MSS值为MTU减去IP基本头(ipv4为20bytes，IPV6为40bytes)和TCP基本头(20bytes)的值，不考虑扩展头。发送端负责发送数据前在这个MSS值的基础上扣除扩展头长度得出真实传输数据的长度。</p><h2 id="wsopt"><a class="markdownIt-Anchor" href="#wsopt"></a> WSOPT</h2><table><thead><tr><th>type</th><th>length</th><th>value</th></tr></thead><tbody><tr><td>0x03</td><td>0x03</td><td>位移量</td></tr></tbody></table><p>在SYN和SYN-ACK中传输,当SYN报文表示可以支持时,SYN-ACK报文就可以发送这个选项.</p><p>在tcp头中,窗口大小是一个<code>16</code>位数字.</p><p>但是在系统中,保存窗口大小用的是一个<code>32</code>位数字.</p><p>如果在选项中加上这个偏移(最大为<code>14</code>,大于<code>14</code>时当作<code>14</code>处理),那么可以使用的窗口的大小能够扩展成<code>30</code>位数字.</p><p>只能设置成不大于<code>14</code>,是为了避免真的用上了整个<code>32</code>位的空间,导致所有序号都在窗口内.</p><p>tcp通过判断序列号是否在<code>第一个未确认序列号 -- 第一个未确认序列号+2^31</code>的范围内,来判断序列号是否是新序列号.</p><p>当窗口过大时将会出错.</p><h2 id="sack"><a class="markdownIt-Anchor" href="#sack"></a> SACK</h2><p>有时候接收方会收到几段不连续的数据(他们的编号不连续),这时候可以发送几个区间,告诉发送方自己收到了哪几段数据.</p><p><code>SACK-permiited</code>在带有SYN标志的包中传输,表示双方是否支持<code>SACK</code>.</p><table><thead><tr><th>type</th><th>length</th><th>value</th></tr></thead><tbody><tr><td>0x04</td><td>0x02</td><td>支持与否</td></tr></tbody></table><p><code>SACK</code>包含若干个区间的描述信息,表示已经收到了哪几个区间内的数据.</p><p>区间的起止都是一个<code>4</code>字节的数字.也就是表示一个区间需要用到<code>8</code>字节.</p><p>由于选项字段最多只有<code>40</code>字节的空间,所以顶多有<code>4</code>个区间</p><table><thead><tr><th>type</th><th>length</th><th>value</th></tr></thead><tbody><tr><td>0x05</td><td>mutable</td><td>区间信息</td></tr></tbody></table><p>未完待续</p>]]></content>
-    
-    
-    <categories>
-      
-      <category>经验和总结</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>tcp</tag>
-      
-      <tag>计算机网络</tag>
-      
-    </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
     <title>linux桌面使用中的那些事</title>
     <link href="/17eed1d/"/>
     <url>/17eed1d/</url>
