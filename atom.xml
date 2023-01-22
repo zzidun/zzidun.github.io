@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-  <title>zzidun blog</title>
+  <title>zzidun&#39;s blog</title>
   
-  <subtitle>战斗</subtitle>
+  <subtitle>zzidun&#39;s blog</subtitle>
   <link href="https://zzidun.tech/atom.xml" rel="self"/>
   
   <link href="https://zzidun.tech/"/>
