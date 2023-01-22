@@ -1,0 +1,897 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/logo.png">
+  <link rel="icon" href="/img/logo.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="zzidun pavo">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="将来会翻译完的(心虚);">
+<meta property="og:type" content="article">
+<meta property="og:title" content="c++标准draft翻译">
+<meta property="og:url" content="https://zzidun.tech/87a42267/index.html">
+<meta property="og:site_name" content="zzidun blog">
+<meta property="og:description" content="将来会翻译完的(心虚);">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-03-05T15:37:28.000Z">
+<meta property="article:modified_time" content="2023-01-22T03:04:00.321Z">
+<meta property="article:author" content="zzidun pavo">
+<meta property="article:tag" content="C++">
+<meta property="article:tag" content="语言律师">
+<meta property="article:tag" content="工地英语">
+<meta property="article:tag" content="有生之年">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>c++标准draft翻译 | zzidun blog</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"zzidun.tech","root":"/","version":"1.9.4","typing":{"enable":false,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/atom.xml" title="zzidun blog" type="application/atom+xml">
+</head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>zzidun&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/4.webp') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle">c++标准draft翻译</span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-03-05 15:37" pubdate>
+          2022年3月5日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          6.9k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          58 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">c++标准draft翻译</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <ul>
+<li>将来会翻译完的(心虚);</li>
+</ul>
+<span id="more"></span>
+<h1 id="0-前言todo"><a class="markdownIt-Anchor" href="#0-前言todo"></a> 0. 前言[todo]</h1>
+<p>有时候，我们会遇到一些语法不能确定的地方。</p>
+<p>这时候我回去翻一下标准。</p>
+<p>所以我把我阅读过的部分翻译一下。</p>
+<p>随着我越看越多，这里也会越来越多。</p>
+<p>目前，文中所见的大部分页内跳转链接都是跳转到文章开头。</p>
+<h1 id="1-范围introscope"><a class="markdownIt-Anchor" href="#1-范围introscope"></a> 1. 范围[intro.scope]</h1>
+<ol>
+<li>
+<p>这个文档指定了<code>C++</code>编程语言的实现要求。本文不仅对<code>C++</code>的实现做出了要求，而且也定义了什么是<code>C++</code>。这些内容可以在本文的各个位置找到。</p>
+</li>
+<li>
+<p><code>C++</code>是一个基于<code>ISO/IEC 9899:2018</code>所描述的C语言的，通用的编程语言。<code>C++</code>提供的工具超越了C语言所提供的，包括额外的数据类型、类、模板、异常、命名空间、操作符重载、函数重载、引用、存储释放操作符、和额外的库。</p>
+</li>
+</ol>
+<h1 id="2-参考标准introrefs"><a class="markdownIt-Anchor" href="#2-参考标准introrefs"></a> 2. 参考标准[intro.refs]</h1>
+<ol>
+<li>
+<p>本文以某些方式借用了下面的文档中的一些或所有内容。下面列出的文档中：如果标明了日期，那么说明我们只引用了该版本；否则，我们引用的是最新版本。</p>
+<ol>
+<li>ISO/IEC 2382, Information technology — Vocabulary</li>
+<li>ISO 8601:2004, Data elements and interchange formats — Information interchange — Representation of dates and times</li>
+<li>ISO/IEC 9899:2018, Programming languages — C</li>
+<li>ISO/IEC/IEEE 9945:2009, Information Technology — Portable Operating System Interface (POSIX)</li>
+<li>ISO/IEC/IEEE 9945:2009/Cor 1:2013, Information Technology — Portable Operating System Interface (POSIX), Technical Corrigendum 1</li>
+<li>ISO/IEC/IEEE 9945:2009/Cor 2:2017, Information Technology — Portable Operating System Interface (POSIX), Technical Corrigendum 2</li>
+<li>ISO/IEC 10646, Information technology — Universal Coded Character Set (UCS)</li>
+<li>ISO/IEC 10646:2003, Information technology — Universal Multiple-Octet Coded Character Set (UCS)</li>
+<li>ISO/IEC/IEEE 60559:2020, Information technology — Microprocessor Systems — Floating-Point arithmetic</li>
+<li>ISO 80000-2:2009, Quantities and units — Part 2: Mathematical signs and symbols to be used in the natural sciences and technology</li>
+<li>Ecma International, ECMAScript3 Language Specification, Standard Ecma-262, third edition, 1999.</li>
+<li>The Unicode Consortium.<br />
+Unicode Standard Annex, UAX #44, Unicode Character Database.<br />
+Edited by Ken Whistler and Laurenţiu Iancu.<br />
+Available from: [<a target="_blank" rel="noopener" href="http://www.unicode.org/reports/tr44/">http://www.unicode.org/reports/tr44/</a>]</li>
+<li>The Unicode Consortium.<br />
+The Unicode Standard, Derived Core Properties.<br />
+Available from: [<a target="_blank" rel="noopener" href="https://www.unicode.org/Public/UCD/latest/ucd/DerivedCoreProperties.txt">https://www.unicode.org/Public/UCD/latest/ucd/DerivedCoreProperties.txt</a>]</li>
+</ol>
+</li>
+<li>
+<p><code>ISO/IEC 9899:2018, Clause 7</code>所描述的库，在下文被称为<code>C标准库</code>。</p>
+</li>
+<li>
+<p><code>ISO/IEC 9945:2009</code>所描述的操作系统接口，在下文被称为<code>POSIX</code>。</p>
+</li>
+<li>
+<p><code>Ecma-262</code>所描述的ECMAScript编程语言，在下文被称为<code>ECMA-262</code>。</p>
+</li>
+<li>
+<p>（记1：从<code>ISO/IEC 10646:2003</code>中引用的内容，只用来支撑一些已经过时特性(<a href="#0-%E5%89%8D%E8%A8%80todo">depr.locale.stdcvt</a>)）。</p>
+</li>
+</ol>
+<h1 id="3-条款和定义introdefs"><a class="markdownIt-Anchor" href="#3-条款和定义introdefs"></a> 3. 条款和定义[intro.defs]</h1>
+<ol>
+<li>
+<p>在<code>ISO/IEC 2382</code>中给出的条款和定义，在<code>ISO 80000-2:2009</code>中给出的条款、定义、和符号，在本文中依旧适用。</p>
+</li>
+<li>
+<p>ISO和IEC在下面的地址中维护了我们所适用的标准文档。</p>
+<ol>
+<li>ISO Online browsing platform: available at [<a target="_blank" rel="noopener" href="https://www.iso.org/obp">https://www.iso.org/obp</a>]</li>
+<li>IEC Electropedia: [available at <a target="_blank" rel="noopener" href="http://www.electropedia.or">http://www.electropedia.or</a>]</li>
+</ol>
+</li>
+<li>
+<p>那些只在本文的一小段中适用的定义，会用斜体来表示。</p>
+</li>
+</ol>
+<h2 id="31-访问defnsaccess"><a class="markdownIt-Anchor" href="#31-访问defnsaccess"></a> 3.1. 访问[defns.access]</h2>
+<p>（运行时的动作）读取或者修改了对象的值。</p>
+<p>（记1：只有标量类型的广义左值可以用来访问对象。标量对象的读取在<a href="#0-%E5%89%8D%E8%A8%80todo">conv.lval</a>中有描述，标量对象的修改在<a href="#0-%E5%89%8D%E8%A8%80todo">expr.ass</a>、<a href="#0-%E5%89%8D%E8%A8%80todo">expr.post.incr</a>和<a href="#0-%E5%89%8D%E8%A8%80todo">expr.pre.incr</a>中有描述。尝试读取或者修改对象，将会导致调用类的构造函数或者赋值操作。尽管这些函数可能会执行一些标量子对象的访问操作，但是这个调用本身并不涉及访问。）</p>
+<h2 id="32-任意位置流defnsarbitrarysteam"><a class="markdownIt-Anchor" href="#32-任意位置流defnsarbitrarysteam"></a> 3.2. 任意位置流[defns.arbitrary.steam]</h2>
+<p>（库）只要在流的长度范围内，就可以定位到任意整数位置的流。</p>
+<p>（记1：所有任意位置流都是可重定位流<a href="#0-%E5%89%8D%E8%A8%80todo">defns.prepolitical.stream</a>）</p>
+<h2 id="33-参数defnsargument"><a class="markdownIt-Anchor" href="#33-参数defnsargument"></a> 3.3. 参数[defns.argument]</h2>
+<p>（函数调用表达式）在括号中的，被逗号分隔的表达式。</p>
+<h2 id="34-参数defnsargumentmacro"><a class="markdownIt-Anchor" href="#34-参数defnsargumentmacro"></a> 3.4. 参数[defns.argument.macro]</h2>
+<p>（宏函数表达式）在括号中的，被逗号分隔的预处理器标记序列。</p>
+<h2 id="35-参数defnsargumentthrow"><a class="markdownIt-Anchor" href="#35-参数defnsargumentthrow"></a> 3.5. 参数[defns.argument.throw]</h2>
+<p>（抛出异常）<a href="#0-%E5%89%8D%E8%A8%80todo">抛出异常</a>的操作数。</p>
+<h2 id="36-参数defnsargumenttempl"><a class="markdownIt-Anchor" href="#36-参数defnsargumenttempl"></a> 3.6. 参数[defns.argument.templ]</h2>
+<p>（模板实例化）在尖括号中的，被逗号分隔的<a href="#0-%E5%89%8D%E8%A8%80todo">常量表达式</a>、<a href="#0-%E5%89%8D%E8%A8%80todo">类型标识符</a>或者<a href="#0-%E5%89%8D%E8%A8%80todo">表达式</a>。</p>
+<h2 id="37-阻塞defnsblock"><a class="markdownIt-Anchor" href="#37-阻塞defnsblock"></a> 3.7. 阻塞[defns.block]</h2>
+<p>（执行）需要等待一些条件被满足才能继续执行被阻塞的操作。</p>
+<h2 id="38-代码块defnsblockstmt"><a class="markdownIt-Anchor" href="#38-代码块defnsblockstmt"></a> 3.8. 代码块[defns.block.stmt]</h2>
+<p>（语句）一些复合语句。</p>
+<h2 id="39-字符defnscharacter"><a class="markdownIt-Anchor" href="#39-字符defnscharacter"></a> 3.9. 字符[defns.character]</h2>
+<p>（库）被按顺序对待时，可以表示文本的对象。</p>
+<p>（记1：不仅仅是意味着<code>char</code>、<code>char_t</code>、<code>char16_t</code>、<code>char32_t</code>、<code>wchar_t</code>对象，而且包括任何在<a href="#0-%E5%89%8D%E8%A8%80todo">字符串</a>、<a href="#0-%E5%89%8D%E8%A8%80todo">本地化</a>、<a href="#0-%E5%89%8D%E8%A8%80todo">输入输出</a>或<a href="#0-%E5%89%8D%E8%A8%80todo">正则</a>中定义的类型）</p>
+<h2 id="310-字符容器类型defnscharactercontainer"><a class="markdownIt-Anchor" href="#310-字符容器类型defnscharactercontainer"></a> 3.10. 字符容器类型[defns.character.container]</h2>
+<p>（库）用来表示字符的类或者类型</p>
+<p>（记1：字符串，输入输出流，正则表达式类模板）</p>
+<h2 id="311-对照元素defnsregexcollatingelement"><a class="markdownIt-Anchor" href="#311-对照元素defnsregexcollatingelement"></a> 3.11. 对照元素[defns.regex.collating.element]</h2>
+<h2 id="312-组件defnscomponent"><a class="markdownIt-Anchor" href="#312-组件defnscomponent"></a> 3.12. 组件[defns.component]</h2>
+<h2 id="313-条件支持defnscondsupp"><a class="markdownIt-Anchor" href="#313-条件支持defnscondsupp"></a> 3.13. 条件支持[defns.cond.supp]</h2>
+<h2 id="314-常数子表达式defnsconstsubexpr"><a class="markdownIt-Anchor" href="#314-常数子表达式defnsconstsubexpr"></a> 3.14. 常数子表达式[defns.const.subexpr]</h2>
+<h2 id="315-死锁defnsdeadlock"><a class="markdownIt-Anchor" href="#315-死锁defnsdeadlock"></a> 3.15. 死锁[defns.deadlock]</h2>
+<h2 id="316-默认行为defnsdefaultbehaviorimpl"><a class="markdownIt-Anchor" href="#316-默认行为defnsdefaultbehaviorimpl"></a> 3.16. 默认行为[defns.default.behavior.impl]</h2>
+<h2 id="317-诊断信息defnsdiagnostic"><a class="markdownIt-Anchor" href="#317-诊断信息defnsdiagnostic"></a> 3.17. 诊断信息[defns.diagnostic]</h2>
+<h2 id="318-defnsargument"><a class="markdownIt-Anchor" href="#318-defnsargument"></a> 3.18. [defns.argument]</h2>
+<h2 id="319-defnsargumentmacro"><a class="markdownIt-Anchor" href="#319-defnsargumentmacro"></a> 3.19. [defns.argument.macro]</h2>
+<h2 id="320-defnsargumentthrow"><a class="markdownIt-Anchor" href="#320-defnsargumentthrow"></a> 3.20. [defns.argument.throw]</h2>
+<h2 id="321-defnsargumenttempl"><a class="markdownIt-Anchor" href="#321-defnsargumenttempl"></a> 3.21. [defns.argument.templ]</h2>
+<h2 id="322-defnsblock"><a class="markdownIt-Anchor" href="#322-defnsblock"></a> 3.22. [defns.block]</h2>
+<h2 id="323-defnsblockstmt"><a class="markdownIt-Anchor" href="#323-defnsblockstmt"></a> 3.23. [defns.block.stmt]</h2>
+<h2 id="324-defnscharacter"><a class="markdownIt-Anchor" href="#324-defnscharacter"></a> 3.24. [defns.character]</h2>
+<h2 id="325-访问defnsaccess"><a class="markdownIt-Anchor" href="#325-访问defnsaccess"></a> 3.25. 访问[defns.access]</h2>
+<h2 id="326-defnsarbitrarysteam"><a class="markdownIt-Anchor" href="#326-defnsarbitrarysteam"></a> 3.26. [defns.arbitrary.steam]</h2>
+<h2 id="327-defnsargument"><a class="markdownIt-Anchor" href="#327-defnsargument"></a> 3.27. [defns.argument]</h2>
+<h2 id="328-访问defnsaccess"><a class="markdownIt-Anchor" href="#328-访问defnsaccess"></a> 3.28. 访问[defns.access]</h2>
+<h2 id="329-defnsarbitrarysteam"><a class="markdownIt-Anchor" href="#329-defnsarbitrarysteam"></a> 3.29. [defns.arbitrary.steam]</h2>
+<h2 id="330-defnsargument"><a class="markdownIt-Anchor" href="#330-defnsargument"></a> 3.30. [defns.argument]</h2>
+<h2 id="331-访问defnsaccess"><a class="markdownIt-Anchor" href="#331-访问defnsaccess"></a> 3.31. 访问[defns.access]</h2>
+<h2 id="332-defnsarbitrarysteam"><a class="markdownIt-Anchor" href="#332-defnsarbitrarysteam"></a> 3.32. [defns.arbitrary.steam]</h2>
+<h2 id="333-defnsargument"><a class="markdownIt-Anchor" href="#333-defnsargument"></a> 3.33. [defns.argument]</h2>
+<h2 id="334-defnsargumentmacro"><a class="markdownIt-Anchor" href="#334-defnsargumentmacro"></a> 3.34. [defns.argument.macro]</h2>
+<h2 id="335-defnsargumentthrow"><a class="markdownIt-Anchor" href="#335-defnsargumentthrow"></a> 3.35. [defns.argument.throw]</h2>
+<h2 id="336-defnsargumenttempl"><a class="markdownIt-Anchor" href="#336-defnsargumenttempl"></a> 3.36. [defns.argument.templ]</h2>
+<h2 id="337-defnsblock"><a class="markdownIt-Anchor" href="#337-defnsblock"></a> 3.37. [defns.block]</h2>
+<h2 id="338-defnsblockstmt"><a class="markdownIt-Anchor" href="#338-defnsblockstmt"></a> 3.38. [defns.block.stmt]</h2>
+<h2 id="339-defnscharacter"><a class="markdownIt-Anchor" href="#339-defnscharacter"></a> 3.39. [defns.character]</h2>
+<h2 id="340-访问defnsaccess"><a class="markdownIt-Anchor" href="#340-访问defnsaccess"></a> 3.40. 访问[defns.access]</h2>
+<h2 id="341-defnsarbitrarysteam"><a class="markdownIt-Anchor" href="#341-defnsarbitrarysteam"></a> 3.41. [defns.arbitrary.steam]</h2>
+<h2 id="342-defnsargument"><a class="markdownIt-Anchor" href="#342-defnsargument"></a> 3.42. [defns.argument]</h2>
+<h2 id="343-访问defnsaccess"><a class="markdownIt-Anchor" href="#343-访问defnsaccess"></a> 3.43. 访问[defns.access]</h2>
+<h2 id="344-defnsarbitrarysteam"><a class="markdownIt-Anchor" href="#344-defnsarbitrarysteam"></a> 3.44. [defns.arbitrary.steam]</h2>
+<h2 id="345-defnsargument"><a class="markdownIt-Anchor" href="#345-defnsargument"></a> 3.45. [defns.argument]</h2>
+<h2 id="346-访问defnsaccess"><a class="markdownIt-Anchor" href="#346-访问defnsaccess"></a> 3.46. 访问[defns.access]</h2>
+<h2 id="347-defnsarbitrarysteam"><a class="markdownIt-Anchor" href="#347-defnsarbitrarysteam"></a> 3.47. [defns.arbitrary.steam]</h2>
+<h2 id="348-defnsargument"><a class="markdownIt-Anchor" href="#348-defnsargument"></a> 3.48. [defns.argument]</h2>
+<h2 id="349-defnsargumentthrow"><a class="markdownIt-Anchor" href="#349-defnsargumentthrow"></a> 3.49. [defns.argument.throw]</h2>
+<h2 id="350-defnsargumenttempl"><a class="markdownIt-Anchor" href="#350-defnsargumenttempl"></a> 3.50. [defns.argument.templ]</h2>
+<h2 id="351-defnsblock"><a class="markdownIt-Anchor" href="#351-defnsblock"></a> 3.51. [defns.block]</h2>
+<h2 id="352-defnsblockstmt"><a class="markdownIt-Anchor" href="#352-defnsblockstmt"></a> 3.52. [defns.block.stmt]</h2>
+<h2 id="353-defnscharacter"><a class="markdownIt-Anchor" href="#353-defnscharacter"></a> 3.53. [defns.character]</h2>
+<h2 id="354-访问defnsaccess"><a class="markdownIt-Anchor" href="#354-访问defnsaccess"></a> 3.54. 访问[defns.access]</h2>
+<h2 id="355-defnsarbitrarysteam"><a class="markdownIt-Anchor" href="#355-defnsarbitrarysteam"></a> 3.55. [defns.arbitrary.steam]</h2>
+<h2 id="356-defnsargument"><a class="markdownIt-Anchor" href="#356-defnsargument"></a> 3.56. [defns.argument]</h2>
+<h2 id="357-访问defnsaccess"><a class="markdownIt-Anchor" href="#357-访问defnsaccess"></a> 3.57. 访问[defns.access]</h2>
+<h2 id="358-defnsarbitrarysteam"><a class="markdownIt-Anchor" href="#358-defnsarbitrarysteam"></a> 3.58. [defns.arbitrary.steam]</h2>
+<h2 id="359-defnsargument"><a class="markdownIt-Anchor" href="#359-defnsargument"></a> 3.59. [defns.argument]</h2>
+<h2 id="360-访问defnsaccess"><a class="markdownIt-Anchor" href="#360-访问defnsaccess"></a> 3.60. 访问[defns.access]</h2>
+<h2 id="361-defnsarbitrarysteam"><a class="markdownIt-Anchor" href="#361-defnsarbitrarysteam"></a> 3.61. [defns.arbitrary.steam]</h2>
+<h2 id="362-defnsargument"><a class="markdownIt-Anchor" href="#362-defnsargument"></a> 3.62. [defns.argument]</h2>
+<h2 id="363-访问defnsaccess"><a class="markdownIt-Anchor" href="#363-访问defnsaccess"></a> 3.63. 访问[defns.access]</h2>
+<h2 id="364-defnsarbitrarysteam"><a class="markdownIt-Anchor" href="#364-defnsarbitrarysteam"></a> 3.64. [defns.arbitrary.steam]</h2>
+<h2 id="365-defnsargument"><a class="markdownIt-Anchor" href="#365-defnsargument"></a> 3.65. [defns.argument]</h2>
+<h2 id="366-访问defnsaccess"><a class="markdownIt-Anchor" href="#366-访问defnsaccess"></a> 3.66. 访问[defns.access]</h2>
+<h2 id="367-defnsarbitrarysteam"><a class="markdownIt-Anchor" href="#367-defnsarbitrarysteam"></a> 3.67. [defns.arbitrary.steam]</h2>
+<h2 id="368-良构defnswellformed"><a class="markdownIt-Anchor" href="#368-良构defnswellformed"></a> 3.68. 良构[defns.well.formed]</h2>
+<p>结构遵守了语法规则和语义规则的<code>C++</code>程序。</p>
+<h1 id="6-基本basic"><a class="markdownIt-Anchor" href="#6-基本basic"></a> 6. 基本[basic]</h1>
+<h2 id="66-程序和链接basiclink"><a class="markdownIt-Anchor" href="#66-程序和链接basiclink"></a> 6.6 程序和链接[basic.link]</h2>
+<ol>
+<li>
+<p>一个程序由一个或多个翻译单元链接在一起组成,一个翻译单元由一系列的声明组成.</p>
+</li>
+<li>
+<p>当一个名字能够表示一个定义在其他作用域的对象/引用/函数/类型/模板/命名空间/变量的时候,他就是一个有链接的名字.</p>
+</li>
+</ol>
+<p>2.1. 当一个名字有外部链接的时候,可以在其他的翻译单元的同作用域,或者同翻译单元的不同作用域中,使用这个名字来引用他表示的实体.</p>
+<p>2.2. 当一个名字有模块链接的时候,可以在其他的模块的同作用域,或者同模块的不同作用域中,使用这个名字来引用他表示的实体.</p>
+<p>2.3. 当一个名字有内部链接的时候,可以在同一翻译单元的其他作用域中,使用这个名字来引用他表示的实体.</p>
+<p>2.4. 当一个名字没有链接时,这个实体不能在其他作用域中,使用名字来引用.</p>
+<ol start="3">
+<li>一个属于某个命名空间(全局变量属于全局命名空间)的实体的,如果符合以下任意条件,那么他的名字具有内部链接:</li>
+</ol>
+<p>3.1. 显式加上static修饰符的变量,变量模板,函数或函数模板,有内部链接.</p>
+<p>3.2. 非volatile,非变量模板的const类型变量有内部链接,除非满足以下任意一点:</p>
+<p>3.2.1. 显式声明了extern</p>
+<p>3.2.2. 他是inline或exported</p>
+<p>3.2.3. 他有前向声明而且他的前向声明没有内部链接</p>
+<p>3.3. 匿名联合体的数据成员有内部链接.</p>
+<h2 id="69-程序执行basicexec"><a class="markdownIt-Anchor" href="#69-程序执行basicexec"></a> 6.9 程序执行[basic.exec]</h2>
+<h3 id="693-开始和终止basicstart"><a class="markdownIt-Anchor" href="#693-开始和终止basicstart"></a> 6.9.3 开始和终止[basic.start]</h3>
+<h4 id="6933-动态初始化和非阻塞变量basicstartdynamic"><a class="markdownIt-Anchor" href="#6933-动态初始化和非阻塞变量basicstartdynamic"></a> 6.9.3.3 动态初始化和非阻塞变量[basic.start.dynamic]</h4>
+<ol>
+<li>在静态存储区的非阻塞变量的动态初始化顺序是未被指定的,通常顺序会更加偏向于内联变量.</li>
+</ol>
+<h1 id="7-表达式expr"><a class="markdownIt-Anchor" href="#7-表达式expr"></a> 7 表达式[expr]</h1>
+<h2 id="76-复合表达式exprcompound"><a class="markdownIt-Anchor" href="#76-复合表达式exprcompound"></a> 7.6 复合表达式[expr.compound]</h2>
+<h3 id="761-后缀表达式exprpost"><a class="markdownIt-Anchor" href="#761-后缀表达式exprpost"></a> 7.6.1 后缀表达式[expr.post]</h3>
+<h4 id="7615-类成员访问exprref"><a class="markdownIt-Anchor" href="#7615-类成员访问exprref"></a> 7.6.1.5 类成员访问[expr.ref]</h4>
+<h1 id="9-声明dcl"><a class="markdownIt-Anchor" href="#9-声明dcl"></a> 9 声明[dcl]</h1>
+<h2 id="92-标识符dclspec"><a class="markdownIt-Anchor" href="#92-标识符dclspec"></a> 9.2 标识符[dcl.spec]</h2>
+<h3 id="929-类型标识符dcltype"><a class="markdownIt-Anchor" href="#929-类型标识符dcltype"></a> 9.2.9 类型标识符[dcl.type]</h3>
+<h4 id="9296-占位类型标识符dclspecauto"><a class="markdownIt-Anchor" href="#9296-占位类型标识符dclspecauto"></a> 9.2.9.6 占位类型标识符[dcl.spec.auto]</h4>
+<h5 id="92961-通常dclspecautogeneral"><a class="markdownIt-Anchor" href="#92961-通常dclspecautogeneral"></a> 9.2.9.6.1 通常[dcl.spec.auto.general]</h5>
+<figure class="highlight elm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs elm"><span class="hljs-title">placeholder</span>-<span class="hljs-keyword">type</span>-specifier:<br>  <span class="hljs-keyword">type</span>-constraint auto<br>  <span class="hljs-keyword">type</span>-constraint decltype ( auto )<br></code></pre></td></tr></table></figure>
+<ol>
+<li>占位类型标识符表示一个占位类型,这个占位类型在类型推导之后将会被替换成真正的类型.</li>
+</ol>
+<h2 id="93-声明符dcldcl"><a class="markdownIt-Anchor" href="#93-声明符dcldcl"></a> 9.3 声明符[dcl.dcl]</h2>
+<h3 id="934-声明符的含义dclmeaning"><a class="markdownIt-Anchor" href="#934-声明符的含义dclmeaning"></a> 9.3.4 声明符的含义[dcl.meaning]</h3>
+<h4 id="9341-通常dclmeaninggeneral"><a class="markdownIt-Anchor" href="#9341-通常dclmeaninggeneral"></a> 9.3.4.1 通常[dcl.meaning.general]</h4>
+<h4 id="9346-函数dclfct"><a class="markdownIt-Anchor" href="#9346-函数dclfct"></a> 9.3.4.6 函数[dcl.fct]</h4>
+<h1 id="11-类"><a class="markdownIt-Anchor" href="#11-类"></a> 11 类</h1>
+<h2 id="114-类成员"><a class="markdownIt-Anchor" href="#114-类成员"></a> 11.4 类成员</h2>
+<h3 id="1149-静态成员"><a class="markdownIt-Anchor" href="#1149-静态成员"></a> 11.4.9 静态成员</h3>
+<h4 id="11491-通常"><a class="markdownIt-Anchor" href="#11491-通常"></a> 11.4.9.1 通常</h4>
+<ol>
+<li>可以使用<code>X::s</code>的方式来表示某个类<code>X</code>的某个静态成员<code>s</code>.不一定需要使用类成员访问[expr.ref]的方式来表示静态成员. 静态成员也可以使用类成员访问的方式来表示,在这种情况下计算对象表达式.</li>
+</ol>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">struct</span> <span class="hljs-title class_">process</span> &#123;<br>  <span class="hljs-function"><span class="hljs-type">static</span> <span class="hljs-type">void</span> <span class="hljs-title">reschedule</span><span class="hljs-params">()</span></span>;<br>&#125;;<br><span class="hljs-function">process&amp; <span class="hljs-title">g</span><span class="hljs-params">()</span></span>;<br><br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">f</span><span class="hljs-params">()</span> </span>&#123;<br>  process::<span class="hljs-built_in">reschedule</span>();        <span class="hljs-comment">// OK, no object necessary</span><br>  <span class="hljs-built_in">g</span>().<span class="hljs-built_in">reschedule</span>();             <span class="hljs-comment">// g() is called</span><br></code></pre></td></tr></table></figure>
+<ol start="2">
+<li>静态成员遵守对象成员访问规则[class.access].当在类成员的声明中使用的时候,<code>static</code>只能用于出现在类定义中的成员声明中.</li>
+</ol>
+<blockquote>
+<p>不能用在出现在命名空间的成员声明中.</p>
+</blockquote>
+<h4 id="11492-静态成员函数classstaticmfct"><a class="markdownIt-Anchor" href="#11492-静态成员函数classstaticmfct"></a> 11.4.9.2 静态成员函数[class.static.mfct]</h4>
+<ol>
+<li>
+<p>[class.mfct]描述的规则同样适用于静态成员函数.</p>
+</li>
+<li>
+<p>静态成员函数没有<code>this</code>指针[expr.prim.this],静态成员函数不能用<code>const</code>, <code>volatile</code> 或 <code>virtual</code>修饰[dcl.fct]</p>
+</li>
+</ol>
+<h4 id="11493-静态数据成员classstaticdata"><a class="markdownIt-Anchor" href="#11493-静态数据成员classstaticdata"></a> 11.4.9.3 静态数据成员[class.static.data]</h4>
+<ol>
+<li>
+<p>静态数据成员不是类的对象的一部分.<code>thread_local</code>的静态数据成员会被每个线程拷贝一份.如果静态数据成员没有声明<code>thread_local</code>,那么类的所有成员共享着一个数据成员.</p>
+</li>
+<li>
+<p>静态数据成员不该被<code>mutable</code>[dcl.stc].静态数据成员不能是匿名类[class.pre], 局部类[class.local]或内嵌类[class.nest]的直接成员[class.meml].</p>
+</li>
+<li>
+<p>在类定义中的非内联静态数据成员并未被定义,他可能是除<code>cv void</code>以外的未完成类型</p>
+</li>
+</ol>
+<blockquote>
+<p>静态数据成员的初始化位于他所隶属的类的作用域内[basic.scope.class]</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">class</span> <span class="hljs-title class_">process</span> &#123;<br>  <span class="hljs-type">static</span> process* run_chain;<br>  <span class="hljs-type">static</span> process* running;<br>&#125;;<br><br>process* process::running = <span class="hljs-built_in">get_main</span>();<br>process* process::run_chain = running;<br></code></pre></td></tr></table></figure>
+<p>静态数据成员<code>run_chain</code>的定义位于全局作用域;符号<code>process::run_chain</code>表示<code>run_chain</code>是类<code>process</code>的成员,并且在类<code>process</code>的作用域内.</p>
+<blockquote>
+<p>一旦静态数据成员被定义,他就会存在,哪怕这个类实例化没有任何对象.</p>
+</blockquote>
+<p>在这个例子,即使类<code>process</code>没产生任何对象,<code>running</code>和<code>run_chain</code>依旧存在.</p>
+<p>[basic.start.static], [basic.start.dynameic]和[basic.start.term]描述了静态数据成员的初始化和销毁.</p>
+<ol start="4">
+<li>
+<p>如果一个非内联.非<code>volatile</code>的常量静态数据成员是一个整数或枚举类型,在类定义中声明语句中,它可以直接使用一个常量通过赋值表达式来初始化.</p>
+</li>
+<li>
+<p>在一个合法的程序中一个静态数据成员只能被定义一次.[basic.def.odr]</p>
+</li>
+<li>
+<p>命名空间访问中的类的静态数据成员具有类名称的链接.[basic.link]</p>
+</li>
+</ol>
+<h1 id="12-重载over"><a class="markdownIt-Anchor" href="#12-重载over"></a> 12 重载[over]</h1>
+<h2 id="122-重载分析overmatch"><a class="markdownIt-Anchor" href="#122-重载分析overmatch"></a> 12.2 重载分析[over.match]</h2>
+<h3 id="1224-最可行的函数overmatchbest"><a class="markdownIt-Anchor" href="#1224-最可行的函数overmatchbest"></a> 12.2.4 最可行的函数[over.match.best]</h3>
+<h4 id="12241-通常overmatchbestgeneral"><a class="markdownIt-Anchor" href="#12241-通常overmatchbestgeneral"></a> 12.2.4.1 通常[over.match.best.general]</h4>
+<h4 id="12242-隐式转换序列overbestics"><a class="markdownIt-Anchor" href="#12242-隐式转换序列overbestics"></a> 12.2.4.2 隐式转换序列[over.best.ics]</h4>
+<h5 id="122421-通常overbesticsgeneral"><a class="markdownIt-Anchor" href="#122421-通常overbesticsgeneral"></a> 12.2.4.2.1 通常[over.best.ics.general]</h5>
+<ol>
+<li>隐式转换序列,是一用于将函数调用时传入的参数类型转换为被调用的函数所需要的参数类型的.</li>
+</ol>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E7%BB%86%E8%AF%B4CPP%E6%A0%87%E5%87%86%E5%92%8Cstl%E6%BA%90%E7%A0%81/" class="category-chain-item">细说CPP标准和stl源码</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/C/">#C++</a>
+      
+        <a href="/tags/%E8%AF%AD%E8%A8%80%E5%BE%8B%E5%B8%88/">#语言律师</a>
+      
+        <a href="/tags/%E5%B7%A5%E5%9C%B0%E8%8B%B1%E8%AF%AD/">#工地英语</a>
+      
+        <a href="/tags/%E6%9C%89%E7%94%9F%E4%B9%8B%E5%B9%B4/">#有生之年</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>c++标准draft翻译</div>
+      <div>https://zzidun.tech/87a42267/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>zzidun pavo</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年3月5日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>zzidun-blog</span></a> <a>powerby</a> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

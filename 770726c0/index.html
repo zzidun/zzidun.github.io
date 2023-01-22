@@ -1,0 +1,882 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/logo.png">
+  <link rel="icon" href="/img/logo.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="zzidun pavo">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="thread的内部类; thread的构造函数; 执行流程; 一些对外函数的实现;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C++thread源码分析">
+<meta property="og:url" content="https://zzidun.tech/770726c0/index.html">
+<meta property="og:site_name" content="zzidun blog">
+<meta property="og:description" content="thread的内部类; thread的构造函数; 执行流程; 一些对外函数的实现;">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-01-31T21:43:54.000Z">
+<meta property="article:modified_time" content="2023-01-22T03:04:00.318Z">
+<meta property="article:author" content="zzidun pavo">
+<meta property="article:tag" content="C++">
+<meta property="article:tag" content="细说std源码">
+<meta property="article:tag" content="线程">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>C++thread源码分析 | zzidun blog</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"zzidun.tech","root":"/","version":"1.9.4","typing":{"enable":false,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/atom.xml" title="zzidun blog" type="application/atom+xml">
+</head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>zzidun&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/4.webp') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle">C++thread源码分析</span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-01-31 21:43" pubdate>
+          2022年1月31日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          18k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          151 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">C++thread源码分析</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <ul>
+<li>thread的内部类;</li>
+<li>thread的构造函数;</li>
+<li>执行流程;</li>
+<li>一些对外函数的实现;</li>
+</ul>
+<span id="more"></span>
+<h2 id="引言"><a class="markdownIt-Anchor" href="#引言"></a> 引言</h2>
+<p>如果写一段这样的代码:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;bits/stdc++.h&gt;</span></span><br><br><span class="hljs-keyword">struct</span> <span class="hljs-title class_">node</span> &#123;<br><br>    <span class="hljs-built_in">node</span>() &#123; <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%p, cons\n&quot;</span>, <span class="hljs-keyword">this</span>); &#125;<br>    <span class="hljs-built_in">node</span>(node &amp;n) &#123; <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%p, copy from %p\n&quot;</span>, <span class="hljs-keyword">this</span>, &amp;n); &#125;<br>    <span class="hljs-built_in">node</span>(node &amp;&amp;n) &#123; <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%p, move from %p\n&quot;</span>, <span class="hljs-keyword">this</span>, &amp;n); &#125;<br>    ~<span class="hljs-built_in">node</span>() &#123; <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%p,dest\n&quot;</span>, <span class="hljs-keyword">this</span>); &#125;<br>&#125;;<br><br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">fun</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> node nd)</span></span><br><span class="hljs-function"></span>&#123;<br>    std::this_thread::<span class="hljs-built_in">sleep_for</span>(std::chrono::<span class="hljs-built_in">seconds</span>(<span class="hljs-number">5</span>));<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%p\n&quot;</span>, &amp;nd);<br>&#125;<br><br><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span><br><span class="hljs-function"></span>&#123;<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;1\n&quot;</span>);<br>    <span class="hljs-function">std::thread <span class="hljs-title">t</span><span class="hljs-params">(fun, node())</span></span>;<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;2\n&quot;</span>);<br>    t.<span class="hljs-built_in">join</span>();<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;3\n&quot;</span>);<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>编译命令为:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">g++ a.cpp -lpthread<br></code></pre></td></tr></table></figure>
+<p>输出结果将会类似这样:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-number">1</span><br><span class="hljs-number">0x7fff2e724a3f</span>, cons<br><span class="hljs-number">0x7fff2e7249f8</span>, move from <span class="hljs-number">0x7fff2e724a3f</span><br><span class="hljs-number">0x5589443292c8</span>, move from <span class="hljs-number">0x7fff2e7249f8</span><br><span class="hljs-number">0x7fff2e7249f8</span>,dest<br><span class="hljs-number">0x7fff2e724a3f</span>,dest<br><span class="hljs-number">2</span><br><span class="hljs-number">0x7fd6a8499df7</span>, move from <span class="hljs-number">0x5589443292c8</span><br><span class="hljs-number">0x7fd6a8499df7</span><br><span class="hljs-number">0x7fd6a8499df7</span>,dest<br><span class="hljs-number">0x5589443292c8</span>,dest<br><span class="hljs-number">3</span><br></code></pre></td></tr></table></figure>
+<p>可以看出,一开始构造了一个对象位于栈内存<code>0x7fff2e724a3f</code>.</p>
+<p>后来他被移动构造到栈内存<code>0x7fff2e7249f8</code>,</p>
+<p>再后来他被移动到堆内存<code>0x5589443292c8</code>,</p>
+<p>然后按照先构造后析构的顺序,析构了<code>0x7fff2e7249f8</code>, <code>0x7fff2e724a3f</code>.</p>
+<p>线程执行之后,他被移动到栈内存<code>0x7fd6a8499df7</code>,等待五秒并打印了这个地址.</p>
+<p>函数执行结束,析构了<code>0x7fd6a8499df7</code>.</p>
+<p>在线程结束时,析构了<code>0x5589443292c8</code>.</p>
+<p>看完下面文章,你会清楚这些构造,移动和析构,都在什么函数,什么时机中执行.</p>
+<h2 id="文件开头定义"><a class="markdownIt-Anchor" href="#文件开头定义"></a> 文件开头定义</h2>
+<h3 id="宏"><a class="markdownIt-Anchor" href="#宏"></a> 宏</h3>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">ifndef</span> _GLIBCXX_THREAD</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> _GLIBCXX_THREAD 1</span><br></code></pre></td></tr></table></figure>
+<p>定义<code>_GLIBCXX_THREAD</code>宏.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">pragma</span> GCC system_header</span><br></code></pre></td></tr></table></figure>
+<p>从<code>#pragma GCC system_header</code>直到文件结束之间的代码会被编译器视为系统头文件之中的代码。系统头文件中的代码往往不能完全遵循C标准, 所以头文件之中的警告信息往往不显示。(除非用<code>#warning</code>显式指明)。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">if</span> __cplusplus &lt; 201103L</span><br><span class="hljs-meta"># <span class="hljs-keyword">include</span> <span class="hljs-string">&lt;bits/c++0x_warning.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">else</span></span><br></code></pre></td></tr></table></figure>
+<p><code>__cpluscplus</code>表示当前的<code>c++</code>标准,主要有这几个值</p>
+<table>
+<thead>
+<tr>
+<th>值</th>
+<th>标准</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>199711L</code></td>
+<td><code>c++98</code></td>
+</tr>
+<tr>
+<td><code>201103L</code></td>
+<td><code>c++11</code></td>
+</tr>
+<tr>
+<td><code>201402L</code></td>
+<td><code>c++14</code></td>
+</tr>
+<tr>
+<td><code>201703L</code></td>
+<td><code>c++17</code></td>
+</tr>
+<tr>
+<td><code>202002L</code></td>
+<td><code>c++20</code></td>
+</tr>
+<tr>
+<td><code>202100L</code></td>
+<td><code>c++23(不完整)</code></td>
+</tr>
+</tbody>
+</table>
+<p>显然他们是单调递增的,<code>c++11</code>之前的<code>__cpluscplus</code>都会小于<code>201103L</code>.</p>
+<p>这里表示如果当前标准小于<code>c++11</code>,那么不引入下面的代码,而是直接引入<code>&lt;bits/c++0x_warning.h&gt;</code>.</p>
+<h3 id="头文件"><a class="markdownIt-Anchor" href="#头文件"></a> 头文件</h3>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;chrono&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;memory&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;tuple&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;cerrno&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;bits/functexcept.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;bits/functional_hash.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;bits/invoke.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;bits/gthr.h&gt;</span></span><br></code></pre></td></tr></table></figure>
+<p>作用如下:</p>
+<table>
+<thead>
+<tr>
+<th>头文件</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>chrono</code></td>
+<td>时间日期相关</td>
+</tr>
+<tr>
+<td><code>memory</code></td>
+<td>内存分配,回收和管理</td>
+</tr>
+<tr>
+<td><code>tuple</code></td>
+<td>元组</td>
+</tr>
+<tr>
+<td><code>cerrno</code></td>
+<td>里面包含了<code>error.h</code>,定义了<code>errno</code>的整数值</td>
+</tr>
+<tr>
+<td><code>bits/functexcept.h</code></td>
+<td>定义了一些内部函数,与抛出异常有关</td>
+</tr>
+<tr>
+<td><code>bits/functional_hash.h</code></td>
+<td>定义了一些哈希相关的类,<code>hash</code>函数最终调用了<code>bits/hash_bytes.h</code>的<code>_Hash_bytes</code></td>
+</tr>
+<tr>
+<td><code>bits/invoke.h</code></td>
+<td>实现了<code>__invoke</code>类,用来调用某个可调用对象</td>
+</tr>
+<tr>
+<td><code>bits/gthr.h</code></td>
+<td>引入了<code>bits/gthr-default.h</code>,这个宏里面定义了<code>thread</code>所需的<code>posix</code>类型</td>
+</tr>
+</tbody>
+</table>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">if</span> defined(_GLIBCXX_HAS_GTHREADS)</span><br></code></pre></td></tr></table></figure>
+<p>在<code>bits/c++config.h</code>中定义如果<code>gthread</code>库可用,值为<code>1</code>.</p>
+<h3 id="可见性"><a class="markdownIt-Anchor" href="#可见性"></a> 可见性</h3>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">namespace</span> std _GLIBCXX_VISIBILITY(<span class="hljs-keyword">default</span>)<br>&#123;<br>_GLIBCXX_BEGIN_NAMESPACE_VERSION<br></code></pre></td></tr></table></figure>
+<p>命名空间的可见性为默认,实体在共享库中可见,并且可以被抢占.</p>
+<p>这个<code>_GLIBCXX_VISIBILITY</code>定义如下:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">ifndef</span> _GLIBCXX_PSEUDO_VISIBILITY</span><br><span class="hljs-meta"># <span class="hljs-keyword">define</span> _GLIBCXX_PSEUDO_VISIBILITY(V)</span><br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br><br><span class="hljs-meta">#<span class="hljs-keyword">if</span> _GLIBCXX_HAVE_ATTRIBUTE_VISIBILITY</span><br><span class="hljs-meta"># <span class="hljs-keyword">define</span> _GLIBCXX_VISIBILITY(V) __attribute__ ((__visibility__ (#V)))</span><br><span class="hljs-meta">#<span class="hljs-keyword">else</span></span><br><span class="hljs-comment">// If this is not supplied by the OS-specific or CPU-specific</span><br><span class="hljs-comment">// headers included below, it will be defined to an empty default.</span><br><span class="hljs-meta"># <span class="hljs-keyword">define</span> _GLIBCXX_VISIBILITY(V) _GLIBCXX_PSEUDO_VISIBILITY(V)</span><br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br></code></pre></td></tr></table></figure>
+<p>如果<code>_GLIBCXX_HAVE_ATTRIBUTE_VISIBILITY</code>,那么设置可见性,不然他就是空的.</p>
+<p>如果宏<code>_GLIBCXX_INLINE_VERSION</code>为真,这个<code>_GLIBCXX_BEGIN_NAMESPACE_VERSION</code>将会套上一个版本号为名的命名空间,否则啥也不干.</p>
+<h2 id="内部类"><a class="markdownIt-Anchor" href="#内部类"></a> 内部类</h2>
+<h3 id="_state"><a class="markdownIt-Anchor" href="#_state"></a> _State</h3>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">/// thread</span><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">thread</span><br>&#123;<br><span class="hljs-keyword">public</span>:<br>  <span class="hljs-comment">// Abstract base class for types that wrap arbitrary functors to be</span><br>  <span class="hljs-comment">// invoked in the new thread of execution.</span><br>  <span class="hljs-keyword">struct</span> <span class="hljs-title class_">_State</span><br>  &#123;<br>    <span class="hljs-keyword">virtual</span> ~_State();<br>    <span class="hljs-keyword">virtual</span> <span class="hljs-type">void</span> _M_run() = <span class="hljs-number">0</span>;<br>  &#125;;<br>  <span class="hljs-keyword">using</span> _State_ptr = unique_ptr&lt;_State&gt;;<br></code></pre></td></tr></table></figure>
+<p>一个抽象基类<code>_State</code>用于封装可执行对象,然后定义一个类型<code>_State_ptr</code>,这是一个用来指向<code>_State</code>的智能指针.</p>
+<h3 id="线程id"><a class="markdownIt-Anchor" href="#线程id"></a> 线程id</h3>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">typedef</span> <span class="hljs-type">__gthread_t</span>			native_handle_type;<br></code></pre></td></tr></table></figure>
+<p><code>__gthread_t</code>在<code>gthr.h</code>中被定义为<code>pthread_t</code>,这是<code>linux</code>的线程id的数据类型,同一进程内唯一.</p>
+<p>这个<code>pthread_t</code>和<code>pid_t</code>有区别.</p>
+<p><code>pid_t</code>是标志进程的另一套机制.</p>
+<p>众所周知,<code>linux</code>的线程是一个特殊的进程,<code>pid_t</code>是这个进程的实际的id.</p>
+<p>为了将这些线程伪装成同一个进程,当我们使用<code>getpid()</code>时,这些线程会返回主线程的进程id.</p>
+<p>使用<code>gettid()</code>可以获取他们真正的进程id.</p>
+<p>这个<code>pid_t</code>是全局唯一的.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs cpp">   <span class="hljs-keyword">class</span> <span class="hljs-title class_">id</span><br>   &#123;<br>     native_handle_type	_M_thread;<br><br>   <span class="hljs-keyword">public</span>:<br>     <span class="hljs-built_in">id</span>() <span class="hljs-keyword">noexcept</span> : _M_thread() &#123; &#125;<br><br>     <span class="hljs-function"><span class="hljs-keyword">explicit</span></span><br><span class="hljs-function">     <span class="hljs-title">id</span><span class="hljs-params">(native_handle_type __id)</span> : _M_thread(__id) &#123;</span> &#125;<br><br>   <span class="hljs-keyword">private</span>:<br>     <span class="hljs-keyword">friend</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">thread</span>;<br>     <span class="hljs-keyword">friend</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">hash</span>&lt;thread::id&gt;;<br><br>     <span class="hljs-keyword">friend</span> <span class="hljs-type">bool</span><br>     <span class="hljs-keyword">operator</span>==(thread::id __x, thread::id __y) <span class="hljs-keyword">noexcept</span>;<br><br>     <span class="hljs-keyword">friend</span> <span class="hljs-type">bool</span><br>     <span class="hljs-keyword">operator</span>&lt;(thread::id __x, thread::id __y) <span class="hljs-keyword">noexcept</span>;<br><br>     <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">class</span> <span class="hljs-title class_">_CharT</span>, <span class="hljs-keyword">class</span> <span class="hljs-title class_">_Traits</span>&gt;<br><span class="hljs-keyword">friend</span> basic_ostream&lt;_CharT, _Traits&gt;&amp;<br><span class="hljs-keyword">operator</span>&lt;&lt;(basic_ostream&lt;_CharT, _Traits&gt;&amp; __out, thread::id __id);<br>   &#125;;<br><br> <span class="hljs-keyword">private</span>:<br>   id				_M_id;<br></code></pre></td></tr></table></figure>
+<p>这个内部类有一个<code>pthread_t</code>成员,他定义了一些友元函数,以便外部函数使用和比较他的<code>pthread_id</code>.</p>
+<p>并且重载了<code>operator&lt;&lt;</code>以便打印线程id.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">// _GLIBCXX_RESOLVE_LIB_DEFECTS</span><br><span class="hljs-comment">// 2097.  packaged_task constructors should be constrained</span><br><span class="hljs-comment">// 3039. Unnecessary decay in thread and packaged_task</span><br><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>  <span class="hljs-keyword">using</span> __not_same = __not_&lt;is_same&lt;<span class="hljs-type">__remove_cvref_t</span>&lt;_Tp&gt;, thread&gt;&gt;;<br></code></pre></td></tr></table></figure>
+<p><code>__remove_cvref_t</code>可以移除<code>_Tp</code>类型的<code>const</code>,<code>volatitle</code>和引用属性.</p>
+<p>然后对比去除这些属性的<code>_Tp</code>类型和<code>thread</code>类型,判断是否相同.</p>
+<p>如果相同,那么<code>__not_same</code>类型的<code>value</code>成员会是<code>false</code>,否则为<code>true</code>.</p>
+<h2 id="生命周期相关"><a class="markdownIt-Anchor" href="#生命周期相关"></a> 生命周期相关</h2>
+<h3 id="构造函数"><a class="markdownIt-Anchor" href="#构造函数"></a> 构造函数</h3>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs cpp">  <span class="hljs-keyword">public</span>:<br>    <span class="hljs-built_in">thread</span>() <span class="hljs-keyword">noexcept</span> = <span class="hljs-keyword">default</span>;<br><br>    <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Callable, <span class="hljs-keyword">typename</span>... _Args,<br>	     <span class="hljs-keyword">typename</span> = _Require&lt;__not_same&lt;_Callable&gt;&gt;&gt;<br>      <span class="hljs-keyword">explicit</span><br>      <span class="hljs-built_in">thread</span>(_Callable&amp;&amp; __f, _Args&amp;&amp;... __args)<br>      &#123;<br>	<span class="hljs-built_in">static_assert</span>( __is_invocable&lt;<span class="hljs-keyword">typename</span> decay&lt;_Callable&gt;::type,<br>				      <span class="hljs-keyword">typename</span> decay&lt;_Args&gt;::type...&gt;::value,<br>	  <span class="hljs-string">&quot;std::thread arguments must be invocable after conversion to rvalues&quot;</span><br>	  );<br><span class="hljs-meta">#<span class="hljs-keyword">ifdef</span> GTHR_ACTIVE_PROXY</span><br>	<span class="hljs-comment">// Create a reference to pthread_create, not just the gthr weak symbol.</span><br>	<span class="hljs-keyword">auto</span> __depend = <span class="hljs-built_in">reinterpret_cast</span>&lt;<span class="hljs-built_in">void</span>(*)()&gt;(&amp;pthread_create);<br><span class="hljs-meta">#<span class="hljs-keyword">else</span></span><br>	<span class="hljs-keyword">auto</span> __depend = <span class="hljs-literal">nullptr</span>;<br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br>        _M_start_thread(_S_make_state(<br>	      __make_invoker(std::forward&lt;_Callable&gt;(__f),<br>			     std::forward&lt;_Args&gt;(__args)...)),<br>	    __depend);<br>      &#125;<br></code></pre></td></tr></table></figure>
+<p><code>_Require</code>的实现如下</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">template</span>&lt;<span class="hljs-type">bool</span>, <span class="hljs-keyword">typename</span> _Tp = <span class="hljs-type">void</span>&gt;<br>  <span class="hljs-keyword">struct</span> enable_if<br>  &#123; &#125;;<br><br><span class="hljs-comment">// Partial specialization for true.</span><br><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>  <span class="hljs-keyword">struct</span> <span class="hljs-title class_">enable_if</span>&lt;<span class="hljs-literal">true</span>, _Tp&gt;<br>  &#123; <span class="hljs-keyword">typedef</span> _Tp type; &#125;;<br><br><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span>... _Cond&gt;<br>  <span class="hljs-keyword">using</span> _Require = <span class="hljs-keyword">typename</span> enable_if&lt;__and_&lt;_Cond...&gt;::value&gt;::type;<br></code></pre></td></tr></table></figure>
+<p><code>_Require</code>的作用:</p>
+<p>如果可变模板参数<code>_Cond</code>进行<code>and</code>运算之后的<code>::value</code>为真(也就是这里的<code>_Callable</code>的类型和<code>thread</code>不同),那么<code>_Require</code>类型为合法类型(是一个<code>void</code>).</p>
+<p>否则他会是一个错误的类型,编译将会报错.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-built_in">static_assert</span>( __is_invocable&lt;<span class="hljs-keyword">typename</span> decay&lt;_Callable&gt;::type,<br>			      <span class="hljs-keyword">typename</span> decay&lt;_Args&gt;::type...&gt;::value,<br>  <span class="hljs-string">&quot;std::thread arguments must be invocable after conversion to rvalues&quot;</span><br>  );<br></code></pre></td></tr></table></figure>
+<p>判断<code>_Callable</code>是否可以执行,根据判断结果,<code>__is_invocable</code>最终会继承<code>true_type</code>或<code>false_type</code>.</p>
+<p>对这个<code>__is_invocable</code>取<code>value</code>,可以得知是否可以调用.</p>
+<p>如果不能调用就会报错<code>std::thread arguments must be invocable after conversion to rvalues</code>.</p>
+<h4 id="__make_invoker"><a class="markdownIt-Anchor" href="#__make_invoker"></a> __make_invoker</h4>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">ifdef</span> GTHR_ACTIVE_PROXY</span><br>	<span class="hljs-comment">// Create a reference to pthread_create, not just the gthr weak symbol.</span><br>	<span class="hljs-keyword">auto</span> __depend = <span class="hljs-built_in">reinterpret_cast</span>&lt;<span class="hljs-built_in">void</span>(*)()&gt;(&amp;pthread_create);<br><span class="hljs-meta">#<span class="hljs-keyword">else</span></span><br>	<span class="hljs-keyword">auto</span> __depend = <span class="hljs-literal">nullptr</span>;<br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br>        _M_start_thread(_S_make_state(<br>	      __make_invoker(std::forward&lt;_Callable&gt;(__f),<br>			     std::forward&lt;_Args&gt;(__args)...)),<br>	    __depend);<br>      &#125;<br></code></pre></td></tr></table></figure>
+<p><code>__make_invoker</code>会返回一个<code>_Invoker</code>对象,函数的实现如下:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs cpp">   <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span>... _Tp&gt;<br>     <span class="hljs-keyword">using</span> __decayed_tuple = tuple&lt;<span class="hljs-keyword">typename</span> decay&lt;_Tp&gt;::type...&gt;;<br><br>   <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Callable, <span class="hljs-keyword">typename</span>... _Args&gt;<br>     <span class="hljs-type">static</span> _Invoker&lt;__decayed_tuple&lt;_Callable, _Args...&gt;&gt;<br>     __make_invoker(_Callable&amp;&amp; __callable, _Args&amp;&amp;... __args)<br>     &#123;<br><span class="hljs-keyword">return</span> &#123; __decayed_tuple&lt;_Callable, _Args...&gt;&#123;<br>    std::forward&lt;_Callable&gt;(__callable), std::forward&lt;_Args&gt;(__args)...<br>&#125; &#125;;<br>     &#125;<br> &#125;;<br></code></pre></td></tr></table></figure>
+<p><code>__decayed_tuple&lt;typename... _Tp&gt;&#123;__args...&#125;</code>可以将大括号内的元素包装成一个元组,元祖内每个元素的类型由尖括号内的模板参数决定.</p>
+<p><code>return</code>会把这个元祖转换为一个<code>_Invoker</code>,这是一个仿函数.后面会提到.</p>
+<p>这里是<strong>第一次</strong>移动,这个<code>_Invoker</code>位于栈上,构造<code>_Invoker</code>的时候参数被移动到<code>_Invoker</code>的成员<code>_M_t</code>.</p>
+<h4 id="_s_make_state"><a class="markdownIt-Anchor" href="#_s_make_state"></a> _S_make_state</h4>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs cpp">   <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Callable&gt;<br>     <span class="hljs-type">static</span> _State_ptr<br>     _S_make_state(_Callable&amp;&amp; __f)<br>     &#123;<br><span class="hljs-keyword">using</span> _Impl = _State_impl&lt;_Callable&gt;;<br><span class="hljs-keyword">return</span> _State_ptr&#123;<span class="hljs-keyword">new</span> _Impl&#123;std::forward&lt;_Callable&gt;(__f)&#125;&#125;;<br>     &#125;<br></code></pre></td></tr></table></figure>
+<p>这个函数接收一个可执行对象<code>__f</code>把它包装成一个<code>_State_impl</code>对象,并返回指向这个对象的智能指针.</p>
+<p>这个<code>_State_impl</code>后面会提到.</p>
+<p>这个<code>_State_ptr</code>是前面定义的指向内部类<code>_State</code>的智能指针.</p>
+<p>这里是<strong>第二次</strong>移动,这里把可执行对象<code>_Invoker</code>移动到堆内存,并且用<code>_State_ptr</code>指向他.</p>
+<p>这个<code>_State_ptr</code>指向的内存将会在线程结束的时候析构,析构时才会释放堆上的这块空间.</p>
+<h4 id="_m_start_thread"><a class="markdownIt-Anchor" href="#_m_start_thread"></a> _M_start_thread</h4>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-type">void</span><br>thread::_M_start_thread(_State_ptr state, <span class="hljs-built_in">void</span> (*)())<br>&#123;<br>  <span class="hljs-type">const</span> <span class="hljs-type">int</span> err = __gthread_create(&amp;_M_id._M_thread,<br>                                   &amp;execute_native_thread_routine,<br>                                   state.<span class="hljs-built_in">get</span>());<br>  <span class="hljs-keyword">if</span> (err)<br>    __throw_system_error(err);<br>  state.<span class="hljs-built_in">release</span>();<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>同<code>state</code>指针指向的内容创建一个线程,然后释放<code>state</code>.</p>
+<p>创建之后这个线程的线程id会保存在内部对象<code>_M_id</code>的<code>_M_thread</code>成员中.</p>
+<p>这里<code>state</code>只是<code>release</code>而没有释放内存.</p>
+<h4 id="execute_native_thread_routine"><a class="markdownIt-Anchor" href="#execute_native_thread_routine"></a> execute_native_thread_routine</h4>
+<p><code>execute_native_thread_routine</code>是执行的关键,他被系统调用,并传入上文中<code>state.get()</code>获得的指针</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-type">static</span> <span class="hljs-type">void</span>*</span><br><span class="hljs-function"><span class="hljs-title">execute_native_thread_routine</span><span class="hljs-params">(<span class="hljs-type">void</span>* __p)</span></span><br><span class="hljs-function"></span>&#123;<br>  thread::_State_ptr <span class="hljs-type">__t</span>&#123; <span class="hljs-built_in">static_cast</span>&lt;thread::_State*&gt;(__p) &#125;;<br>  <span class="hljs-type">__t</span>-&gt;_M_run();<br>  <span class="hljs-keyword">return</span> <span class="hljs-literal">nullptr</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>一顿转换之后获得了指向可执行对象的智能指针<code>__t</code>.</p>
+<p><code>__t-&gt;_M_tun()</code>将会执行<code>_Invoker</code>的<code>operator()()</code>.</p>
+<p><strong>第三次</strong>移动发生在这里.</p>
+<p>把堆上的内容移动到栈上,传给<code>std::__invoke</code>,从而执行.</p>
+<h3 id="析构函数"><a class="markdownIt-Anchor" href="#析构函数"></a> 析构函数</h3>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs cpp">   ~<span class="hljs-built_in">thread</span>()<br>   &#123;<br>     <span class="hljs-keyword">if</span> (<span class="hljs-built_in">joinable</span>())<br>std::<span class="hljs-built_in">terminate</span>();<br>   &#125;<br></code></pre></td></tr></table></figure>
+<p><code>joinable()</code>会新建一个<code>id</code>,和当前的<code>_M_id</code>对比,如果相同,那么说明这个线程没有传入一个可执行对象,或者已经被<code>join</code>了.</p>
+<p>否则执行<code>std::terminate</code>结束进程.详情见<a target="_blank" rel="noopener" href="https://zh.cppreference.com/w/cpp/error/terminate">这里</a>.</p>
+<h3 id="拷贝构造函数和移动构造函数"><a class="markdownIt-Anchor" href="#拷贝构造函数和移动构造函数"></a> 拷贝构造函数和移动构造函数</h3>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-built_in">thread</span>(<span class="hljs-type">const</span> thread&amp;) = <span class="hljs-keyword">delete</span>;<br><br><span class="hljs-built_in">thread</span>(thread&amp;&amp; <span class="hljs-type">__t</span>) <span class="hljs-keyword">noexcept</span><br>&#123; <span class="hljs-built_in">swap</span>(<span class="hljs-type">__t</span>); &#125;<br></code></pre></td></tr></table></figure>
+<h3 id="拷贝赋值函数和移动赋值函数"><a class="markdownIt-Anchor" href="#拷贝赋值函数和移动赋值函数"></a> 拷贝赋值函数和移动赋值函数</h3>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs cpp">   thread&amp; <span class="hljs-keyword">operator</span>=(<span class="hljs-type">const</span> thread&amp;) = <span class="hljs-keyword">delete</span>;<br><br>   thread&amp; <span class="hljs-keyword">operator</span>=(thread&amp;&amp; <span class="hljs-type">__t</span>) <span class="hljs-keyword">noexcept</span><br>   &#123;<br>     <span class="hljs-keyword">if</span> (<span class="hljs-built_in">joinable</span>())<br>std::<span class="hljs-built_in">terminate</span>();<br>     <span class="hljs-built_in">swap</span>(<span class="hljs-type">__t</span>);<br>     <span class="hljs-keyword">return</span> *<span class="hljs-keyword">this</span>;<br>   &#125;<br><br>   <span class="hljs-function"><span class="hljs-type">void</span></span><br><span class="hljs-function">   <span class="hljs-title">swap</span><span class="hljs-params">(thread&amp; <span class="hljs-type">__t</span>)</span> <span class="hljs-keyword">noexcept</span></span><br><span class="hljs-function">   </span>&#123; std::<span class="hljs-built_in">swap</span>(_M_id, <span class="hljs-type">__t</span>._M_id); &#125;<br></code></pre></td></tr></table></figure>
+<p>移动赋值之前需要先判断是否<code>terminate</code>,移动<code>__t</code>的内容到当前对象.</p>
+<h2 id="基本操作"><a class="markdownIt-Anchor" href="#基本操作"></a> 基本操作</h2>
+<h3 id="joinable"><a class="markdownIt-Anchor" href="#joinable"></a> joinable</h3>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-type">bool</span></span><br><span class="hljs-function"><span class="hljs-title">joinable</span><span class="hljs-params">()</span> <span class="hljs-type">const</span> <span class="hljs-keyword">noexcept</span></span><br><span class="hljs-function"></span>&#123; <span class="hljs-keyword">return</span> !(_M_id == <span class="hljs-built_in">id</span>()); &#125;<br></code></pre></td></tr></table></figure>
+<p>新建一个<code>id</code>,和当前的<code>_M_id</code>对比,如果相同,那么说明这个线程没有传入一个可执行对象,或者已经被<code>join</code>了.</p>
+<h3 id="join"><a class="markdownIt-Anchor" href="#join"></a> join</h3>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-type">void</span></span><br><span class="hljs-function"><span class="hljs-title">join</span><span class="hljs-params">()</span></span>;<br></code></pre></td></tr></table></figure>
+<p>实现在<code>thread.cc</code>文件中</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-type">void</span></span><br><span class="hljs-function"><span class="hljs-title">thread::join</span><span class="hljs-params">()</span></span><br><span class="hljs-function"></span>&#123;<br>  <span class="hljs-type">int</span> __e = EINVAL;<br>  <span class="hljs-keyword">if</span> (_M_id != <span class="hljs-built_in">id</span>())<br>    __e = __gthread_join(_M_id._M_thread, <span class="hljs-number">0</span>);<br>  <span class="hljs-keyword">if</span> (__e)<br>    __throw_system_error(__e);<br>  _M_id = <span class="hljs-built_in">id</span>();<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>如果当前是<code>joinable</code>的,就调用<code>__gthread_join</code>.</p>
+<p>然后<code>_M_id</code>恢复为<code>id()</code>.</p>
+<p><code>__gthread_join</code>定义如下:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta"># <span class="hljs-keyword">define</span> __gthrw_(name) __gthrw_ ## name</span><br><br><span class="hljs-type">static</span> <span class="hljs-keyword">inline</span> <span class="hljs-type">int</span><br>__gthread_join (<span class="hljs-type">__gthread_t</span> __threadid, <span class="hljs-type">void</span> **__value_ptr)<br>&#123;<br>  <span class="hljs-keyword">return</span> __gthrw_(pthread_join) (__threadid, __value_ptr);<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>调用<code>__gthrw_pthread_join</code>,传入<code>_M_id._M_thread</code>和一个<code>0</code>.</p>
+<p>我目前没有找到他的实现,猜测应该是<code>pthread_join</code>封装,以后找到了再补充.</p>
+<h3 id="detach"><a class="markdownIt-Anchor" href="#detach"></a> detach</h3>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-type">void</span></span><br><span class="hljs-function"><span class="hljs-title">detach</span><span class="hljs-params">()</span></span>;<br></code></pre></td></tr></table></figure>
+<p>他的实现如下</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-type">void</span></span><br><span class="hljs-function"><span class="hljs-title">thread::detach</span><span class="hljs-params">()</span></span><br><span class="hljs-function"></span>&#123;<br>  <span class="hljs-type">int</span> __e = EINVAL;<br>  <span class="hljs-keyword">if</span> (_M_id != <span class="hljs-built_in">id</span>())<br>    __e = __gthread_detach(_M_id._M_thread);<br>  <span class="hljs-keyword">if</span> (__e)<br>    __throw_system_error(__e);<br>  _M_id = <span class="hljs-built_in">id</span>();<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>也是和<code>join</code>只能找到这里</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs cpp">__gthread_detach (<span class="hljs-type">__gthread_t</span> __threadid)<br>&#123;<br>  <span class="hljs-keyword">return</span> __gthrw_(pthread_detach) (__threadid);<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="获取id"><a class="markdownIt-Anchor" href="#获取id"></a> 获取id</h3>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function">thread::id</span><br><span class="hljs-function"><span class="hljs-title">get_id</span><span class="hljs-params">()</span> <span class="hljs-type">const</span> <span class="hljs-keyword">noexcept</span></span><br><span class="hljs-function"></span>&#123; <span class="hljs-keyword">return</span> _M_id; &#125;<br><br><span class="hljs-comment">/** @pre thread is joinable</span><br><span class="hljs-comment"> */</span><br><span class="hljs-function">native_handle_type</span><br><span class="hljs-function"><span class="hljs-title">native_handle</span><span class="hljs-params">()</span></span><br><span class="hljs-function"></span>&#123; <span class="hljs-keyword">return</span> _M_id._M_thread; &#125;<br></code></pre></td></tr></table></figure>
+<h3 id="返回实现支持的并发线程数量"><a class="markdownIt-Anchor" href="#返回实现支持的并发线程数量"></a> 返回实现支持的并发线程数量</h3>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">// Returns a value that hints at the number of hardware thread contexts.</span><br><span class="hljs-function"><span class="hljs-type">static</span> <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span></span><br><span class="hljs-function"><span class="hljs-title">hardware_concurrency</span><span class="hljs-params">()</span> <span class="hljs-keyword">noexcept</span></span>;<br></code></pre></td></tr></table></figure>
+<p>实现如下</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-type">unsigned</span> <span class="hljs-type">int</span></span><br><span class="hljs-function"><span class="hljs-title">thread::hardware_concurrency</span><span class="hljs-params">()</span> <span class="hljs-keyword">noexcept</span></span><br><span class="hljs-function"></span>&#123;<br>  <span class="hljs-type">int</span> __n = _GLIBCXX_NPROCS;<br>  <span class="hljs-keyword">if</span> (__n &lt; <span class="hljs-number">0</span>)<br>    __n = <span class="hljs-number">0</span>;<br>  <span class="hljs-keyword">return</span> __n;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="内部类-ii"><a class="markdownIt-Anchor" href="#内部类-ii"></a> 内部类 II</h2>
+<h3 id="_state_impl"><a class="markdownIt-Anchor" href="#_state_impl"></a> _State_impl</h3>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs cpp"> <span class="hljs-keyword">private</span>:<br>   <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Callable&gt;<br>     <span class="hljs-keyword">struct</span> <span class="hljs-title class_">_State_impl</span> : <span class="hljs-keyword">public</span> _State<br>     &#123;<br>_Callable		_M_func;<br><br>_State_impl(_Callable&amp;&amp; __f) : _M_func(std::forward&lt;_Callable&gt;(__f))<br>&#123; &#125;<br><br><span class="hljs-type">void</span><br>_M_run() &#123; _M_func(); &#125;<br>     &#125;;<br></code></pre></td></tr></table></figure>
+<p>这个类继承了<code>_State</code>并且有一个可执行对象作为成员.</p>
+<p>将<code>_M_run()</code>实现为执行这个可执行对象.</p>
+<p>在构造的位置,他把接收到的接收到的<code>_Invoker</code>,当作<code>_M_func</code>.</p>
+<h2 id="一些内部函数"><a class="markdownIt-Anchor" href="#一些内部函数"></a> 一些内部函数</h2>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs cpp">   <span class="hljs-type">void</span><br>   _M_start_thread(_State_ptr, <span class="hljs-built_in">void</span> (*)());<br><br>   <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Callable&gt;<br>     <span class="hljs-type">static</span> _State_ptr<br>     _S_make_state(_Callable&amp;&amp; __f)<br>     &#123;<br><span class="hljs-keyword">using</span> _Impl = _State_impl&lt;_Callable&gt;;<br><span class="hljs-keyword">return</span> _State_ptr&#123;<span class="hljs-keyword">new</span> _Impl&#123;std::forward&lt;_Callable&gt;(__f)&#125;&#125;;<br>     &#125;<br></code></pre></td></tr></table></figure>
+<p>前面构造函数已经讲过.</p>
+<h2 id="内部类-iii"><a class="markdownIt-Anchor" href="#内部类-iii"></a> 内部类 III</h2>
+<h3 id="_impl_base"><a class="markdownIt-Anchor" href="#_impl_base"></a> _Impl_base</h3>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">if</span> _GLIBCXX_THREAD_ABI_COMPAT</span><br>  <span class="hljs-keyword">public</span>:<br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">_Impl_base</span>;<br>    <span class="hljs-keyword">typedef</span> shared_ptr&lt;_Impl_base&gt;	__shared_base_type;<br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">_Impl_base</span><br>    &#123;<br>      __shared_base_type	_M_this_ptr;<br>      <span class="hljs-keyword">virtual</span> ~_Impl_base() = <span class="hljs-keyword">default</span>;<br>      <span class="hljs-keyword">virtual</span> <span class="hljs-type">void</span> _M_run() = <span class="hljs-number">0</span>;<br>    &#125;;<br></code></pre></td></tr></table></figure>
+<p>这个<code>_Impl_base</code>持有一个指向<code>_Impl_base</code>的智能指针.目前意义不明,后面将会提到.</p>
+<h4 id=""><a class="markdownIt-Anchor" href="#"></a> </h4>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs cpp">  <span class="hljs-keyword">private</span>:<br>    <span class="hljs-type">void</span><br>    _M_start_thread(__shared_base_type, <span class="hljs-built_in">void</span> (*)());<br><br>    <span class="hljs-type">void</span><br>    _M_start_thread(__shared_base_type);<br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br></code></pre></td></tr></table></figure>
+<p>实现如下</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">if</span> _GLIBCXX_THREAD_ABI_COMPAT</span><br>  <span class="hljs-type">void</span><br>  thread::_M_start_thread(__shared_base_type __b)<br>  &#123;<br>    <span class="hljs-keyword">if</span> (!__gthread_active_p())<br><span class="hljs-meta">#<span class="hljs-keyword">if</span> __cpp_exceptions</span><br>      <span class="hljs-keyword">throw</span> <span class="hljs-built_in">system_error</span>(<span class="hljs-built_in">make_error_code</span>(errc::operation_not_permitted),<br>                         <span class="hljs-string">&quot;Enable multithreading to use std::thread&quot;</span>);<br><span class="hljs-meta">#<span class="hljs-keyword">else</span></span><br>      __throw_system_error(<span class="hljs-built_in">int</span>(errc::operation_not_permitted));<br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br>    _M_start_thread(std::<span class="hljs-built_in">move</span>(__b), <span class="hljs-literal">nullptr</span>);<br>  &#125;<br>  <span class="hljs-type">void</span><br>  thread::_M_start_thread(__shared_base_type __b, <span class="hljs-built_in">void</span> (*)())<br>  &#123;<br>    <span class="hljs-keyword">auto</span> ptr = __b.<span class="hljs-built_in">get</span>();<br>    <span class="hljs-comment">// Create a reference cycle that will be broken in the new thread.</span><br>    ptr-&gt;_M_this_ptr = std::<span class="hljs-built_in">move</span>(__b);<br>    <span class="hljs-type">int</span> __e = __gthread_create(&amp;_M_id._M_thread,<br>                               &amp;execute_native_thread_routine_compat, ptr);<br>    <span class="hljs-keyword">if</span> (__e)<br>    &#123;<br>      ptr-&gt;_M_this_ptr.<span class="hljs-built_in">reset</span>();  <span class="hljs-comment">// break reference cycle, destroying *ptr.</span><br>      __throw_system_error(__e);<br>    &#125;<br>  &#125;<br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br></code></pre></td></tr></table></figure>
+<p>他和前面提到的<code>thread::_M_start_thread(_State_ptr state, void (*)())</code>不同.</p>
+<p>目前没看出来哪里会用到这个内部类,日后补充.</p>
+<h3 id="_invoker"><a class="markdownIt-Anchor" href="#_invoker"></a> _Invoker</h3>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs cpp"> <span class="hljs-keyword">private</span>:<br>   <span class="hljs-comment">// A call wrapper that does INVOKE(forwarded tuple elements...)</span><br>   <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tuple&gt;<br>     <span class="hljs-keyword">struct</span> <span class="hljs-title class_">_Invoker</span><br>     &#123;<br>_Tuple _M_t;<br><br><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span>&gt;<br>  <span class="hljs-keyword">struct</span> <span class="hljs-title class_">__result</span>;<br><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Fn, <span class="hljs-keyword">typename</span>... _Args&gt;<br>  <span class="hljs-keyword">struct</span> <span class="hljs-title class_">__result</span>&lt;tuple&lt;_Fn, _Args...&gt;&gt;<br>  : __invoke_result&lt;_Fn, _Args...&gt;<br>  &#123; &#125;;<br><br><span class="hljs-keyword">template</span>&lt;<span class="hljs-type">size_t</span>... _Ind&gt;<br>  <span class="hljs-keyword">typename</span> __result&lt;_Tuple&gt;::type<br>  _M_invoke(_Index_tuple&lt;_Ind...&gt;)<br>  &#123; <span class="hljs-keyword">return</span> std::__invoke(std::<span class="hljs-built_in">get</span>&lt;_Ind&gt;(std::<span class="hljs-built_in">move</span>(_M_t))...); &#125;<br><br><span class="hljs-keyword">typename</span> __result&lt;_Tuple&gt;::<span class="hljs-function">type</span><br><span class="hljs-function"><span class="hljs-title">operator</span><span class="hljs-params">()</span><span class="hljs-params">()</span></span><br><span class="hljs-function"></span>&#123;<br>  <span class="hljs-keyword">using</span> _Indices<br>    = <span class="hljs-keyword">typename</span> _Build_index_tuple&lt;tuple_size&lt;_Tuple&gt;::value&gt;::__type;<br>  <span class="hljs-keyword">return</span> _M_invoke(_Indices());<br>&#125;<br>     &#125;;<br></code></pre></td></tr></table></figure>
+<h4 id="_m_invoke"><a class="markdownIt-Anchor" href="#_m_invoke"></a> _M_invoke</h4>
+<p>这个函数把<code>_M_t</code>中的每个元素取出,传给<code>std::__invoke</code>以执行.</p>
+<p>然后返回<code>__result&lt;_Tuple&gt;::type</code>类型的返回值.</p>
+<p>这里的具体实现日后补充.</p>
+<h4 id="__make_invoker-2"><a class="markdownIt-Anchor" href="#__make_invoker-2"></a> __make_invoker</h4>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs cpp">   <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span>... _Tp&gt;<br>     <span class="hljs-keyword">using</span> __decayed_tuple = tuple&lt;<span class="hljs-keyword">typename</span> decay&lt;_Tp&gt;::type...&gt;;<br><br> <span class="hljs-keyword">public</span>:<br>   <span class="hljs-comment">// Returns a call wrapper that stores</span><br>   <span class="hljs-comment">// tuple&#123;DECAY_COPY(__callable), DECAY_COPY(__args)...&#125;.</span><br>   <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Callable, <span class="hljs-keyword">typename</span>... _Args&gt;<br>     <span class="hljs-type">static</span> _Invoker&lt;__decayed_tuple&lt;_Callable, _Args...&gt;&gt;<br>     __make_invoker(_Callable&amp;&amp; __callable, _Args&amp;&amp;... __args)<br>     &#123;<br><span class="hljs-keyword">return</span> &#123; __decayed_tuple&lt;_Callable, _Args...&gt;&#123;<br>    std::forward&lt;_Callable&gt;(__callable), std::forward&lt;_Args&gt;(__args)...<br>&#125; &#125;;<br>     &#125;<br> &#125;;<br></code></pre></td></tr></table></figure>
+<p>上面构造函数处已经介绍.</p>
+<h2 id="线程比较操作"><a class="markdownIt-Anchor" href="#线程比较操作"></a> 线程比较操作</h2>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-keyword">inline</span> <span class="hljs-type">void</span></span><br><span class="hljs-function"><span class="hljs-title">swap</span><span class="hljs-params">(thread&amp; __x, thread&amp; __y)</span> <span class="hljs-keyword">noexcept</span></span><br><span class="hljs-function"></span>&#123; __x.<span class="hljs-built_in">swap</span>(__y); &#125;<br><br><span class="hljs-keyword">inline</span> <span class="hljs-type">bool</span><br><span class="hljs-keyword">operator</span>==(thread::id __x, thread::id __y) <span class="hljs-keyword">noexcept</span><br>&#123;<br>  <span class="hljs-comment">// pthread_equal is undefined if either thread ID is not valid, so we</span><br>  <span class="hljs-comment">// can&#x27;t safely use __gthread_equal on default-constructed values (nor</span><br>  <span class="hljs-comment">// the non-zero value returned by this_thread::get_id() for</span><br>  <span class="hljs-comment">// single-threaded programs using GNU libc). Assume EqualityComparable.</span><br>  <span class="hljs-keyword">return</span> __x._M_thread == __y._M_thread;<br>&#125;<br><br><span class="hljs-keyword">inline</span> <span class="hljs-type">bool</span><br><span class="hljs-keyword">operator</span>!=(thread::id __x, thread::id __y) <span class="hljs-keyword">noexcept</span><br>&#123; <span class="hljs-keyword">return</span> !(__x == __y); &#125;<br><br><span class="hljs-keyword">inline</span> <span class="hljs-type">bool</span><br><span class="hljs-keyword">operator</span>&lt;(thread::id __x, thread::id __y) <span class="hljs-keyword">noexcept</span><br>&#123;<br>  <span class="hljs-comment">// Pthreads doesn&#x27;t define any way to do this, so we just have to</span><br>  <span class="hljs-comment">// assume native_handle_type is LessThanComparable.</span><br>  <span class="hljs-keyword">return</span> __x._M_thread &lt; __y._M_thread;<br>&#125;<br><br><span class="hljs-keyword">inline</span> <span class="hljs-type">bool</span><br><span class="hljs-keyword">operator</span>&lt;=(thread::id __x, thread::id __y) <span class="hljs-keyword">noexcept</span><br>&#123; <span class="hljs-keyword">return</span> !(__y &lt; __x); &#125;<br><br><span class="hljs-keyword">inline</span> <span class="hljs-type">bool</span><br><span class="hljs-keyword">operator</span>&gt;(thread::id __x, thread::id __y) <span class="hljs-keyword">noexcept</span><br>&#123; <span class="hljs-keyword">return</span> __y &lt; __x; &#125;<br><br><span class="hljs-keyword">inline</span> <span class="hljs-type">bool</span><br><span class="hljs-keyword">operator</span>&gt;=(thread::id __x, thread::id __y) <span class="hljs-keyword">noexcept</span><br>&#123; <span class="hljs-keyword">return</span> !(__x &lt; __y); &#125;<br></code></pre></td></tr></table></figure>
+<p>纯粹是在数值上对比线程id.</p>
+<h2 id="哈希"><a class="markdownIt-Anchor" href="#哈希"></a> 哈希</h2>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">// DR 889.</span><br><span class="hljs-comment">/// std::hash specialization for thread::id.</span><br><span class="hljs-keyword">template</span>&lt;&gt;<br>  <span class="hljs-keyword">struct</span> <span class="hljs-title class_">hash</span>&lt;thread::id&gt;<br>  : <span class="hljs-keyword">public</span> __hash_base&lt;<span class="hljs-type">size_t</span>, thread::id&gt;<br>  &#123;<br>    <span class="hljs-function"><span class="hljs-type">size_t</span></span><br><span class="hljs-function">    <span class="hljs-title">operator</span><span class="hljs-params">()</span><span class="hljs-params">(<span class="hljs-type">const</span> thread::id&amp; __id)</span> <span class="hljs-type">const</span> <span class="hljs-keyword">noexcept</span></span><br><span class="hljs-function">    </span>&#123; <span class="hljs-keyword">return</span> std::_Hash_impl::<span class="hljs-built_in">hash</span>(__id._M_thread); &#125;<br>  &#125;;<br></code></pre></td></tr></table></figure>
+<p>关键的函数<code>_Hash_impl::hash</code>定义于<code>bits/functional_hash.h</code></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">struct</span> <span class="hljs-title class_">_Hash_impl</span><br>&#123;<br>  <span class="hljs-function"><span class="hljs-type">static</span> <span class="hljs-type">size_t</span></span><br><span class="hljs-function">  <span class="hljs-title">hash</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">void</span>* __ptr, <span class="hljs-type">size_t</span> __clength,</span></span><br><span class="hljs-params"><span class="hljs-function"><span class="hljs-type">size_t</span> __seed = <span class="hljs-keyword">static_cast</span>&lt;<span class="hljs-type">size_t</span>&gt;(<span class="hljs-number">0xc70f6907</span>UL))</span></span><br><span class="hljs-function">  </span>&#123; <span class="hljs-keyword">return</span> _Hash_bytes(__ptr, __clength, __seed); &#125;<br><br>  <span class="hljs-function"><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;</span><br><span class="hljs-function">    <span class="hljs-type">static</span> <span class="hljs-type">size_t</span></span><br><span class="hljs-function">    <span class="hljs-title">hash</span><span class="hljs-params">(<span class="hljs-type">const</span> _Tp&amp; __val)</span></span><br><span class="hljs-function">    </span>&#123; <span class="hljs-keyword">return</span> <span class="hljs-built_in">hash</span>(&amp;__val, <span class="hljs-built_in">sizeof</span>(__val)); &#125;<br><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>    <span class="hljs-type">static</span> <span class="hljs-type">size_t</span><br>    __hash_combine(<span class="hljs-type">const</span> _Tp&amp; __val, <span class="hljs-type">size_t</span> __hash)<br>    &#123; <span class="hljs-keyword">return</span> <span class="hljs-built_in">hash</span>(&amp;__val, <span class="hljs-built_in">sizeof</span>(__val), __hash); &#125;<br>&#125;;<br></code></pre></td></tr></table></figure>
+<p>他最终调用了<code>_Hash_bytes</code>.定义于<code>hash_bytes.cc</code></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs cpp">_Hash_bytes(<span class="hljs-type">const</span> <span class="hljs-type">void</span>* ptr, <span class="hljs-type">size_t</span> len, <span class="hljs-type">size_t</span> seed)<br>&#123;<br>  <span class="hljs-type">static</span> <span class="hljs-type">const</span> <span class="hljs-type">size_t</span> mul = (((<span class="hljs-type">size_t</span>) <span class="hljs-number">0xc6a4a793</span>UL) &lt;&lt; <span class="hljs-number">32UL</span>)<br>                            + (<span class="hljs-type">size_t</span>) <span class="hljs-number">0x5bd1e995</span>UL;<br>  <span class="hljs-type">const</span> <span class="hljs-type">char</span>* <span class="hljs-type">const</span> buf = <span class="hljs-built_in">static_cast</span>&lt;<span class="hljs-type">const</span> <span class="hljs-type">char</span>*&gt;(ptr);<br>  <span class="hljs-comment">// Remove the bytes not divisible by the sizeof(size_t).  This</span><br>  <span class="hljs-comment">// allows the main loop to process the data as 64-bit integers.</span><br>  <span class="hljs-type">const</span> <span class="hljs-type">int</span> len_aligned = len &amp; ~<span class="hljs-number">0x7</span>;<br>  <span class="hljs-type">const</span> <span class="hljs-type">char</span>* <span class="hljs-type">const</span> end = buf + len_aligned;<br>  <span class="hljs-type">size_t</span> hash = seed ^ (len * mul);<br>  <span class="hljs-keyword">for</span> (<span class="hljs-type">const</span> <span class="hljs-type">char</span>* p = buf; p != end; p += <span class="hljs-number">8</span>)<br>    &#123;<br>      <span class="hljs-type">const</span> <span class="hljs-type">size_t</span> data = <span class="hljs-built_in">shift_mix</span>(<span class="hljs-built_in">unaligned_load</span>(p) * mul) * mul;<br>      hash ^= data;<br>      hash *= mul;<br>    &#125;<br>  <span class="hljs-keyword">if</span> ((len &amp; <span class="hljs-number">0x7</span>) != <span class="hljs-number">0</span>)<br>    &#123;<br>      <span class="hljs-type">const</span> <span class="hljs-type">size_t</span> data = <span class="hljs-built_in">load_bytes</span>(end, len &amp; <span class="hljs-number">0x7</span>);<br>      hash ^= data;<br>      hash *= mul;<br>    &#125;<br>  hash = <span class="hljs-built_in">shift_mix</span>(hash) * mul;<br>  hash = <span class="hljs-built_in">shift_mix</span>(hash);<br>  <span class="hljs-keyword">return</span> hash;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="打印线程"><a class="markdownIt-Anchor" href="#打印线程"></a> 打印线程</h2>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs cpp"> <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">class</span> <span class="hljs-title class_">_CharT</span>, <span class="hljs-keyword">class</span> <span class="hljs-title class_">_Traits</span>&gt;<br>   <span class="hljs-keyword">inline</span> basic_ostream&lt;_CharT, _Traits&gt;&amp;<br>   <span class="hljs-keyword">operator</span>&lt;&lt;(basic_ostream&lt;_CharT, _Traits&gt;&amp; __out, thread::id __id)<br>   &#123;<br>     <span class="hljs-keyword">if</span> (__id == thread::<span class="hljs-built_in">id</span>())<br><span class="hljs-keyword">return</span> __out &lt;&lt; <span class="hljs-string">&quot;thread::id of a non-executing thread&quot;</span>;<br>     <span class="hljs-keyword">else</span><br><span class="hljs-keyword">return</span> __out &lt;&lt; __id._M_thread;<br>   &#125;<br></code></pre></td></tr></table></figure>
+<h2 id="this-thread"><a class="markdownIt-Anchor" href="#this-thread"></a> this thread</h2>
+<p>以下是一些获取id,睡眠相关的函数.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br></pre></td><td class="code"><pre><code class="hljs cpp">  <span class="hljs-keyword">namespace</span> this_thread<br>  &#123;<br>    <span class="hljs-comment">/// get_id</span><br>    <span class="hljs-function"><span class="hljs-keyword">inline</span> thread::id</span><br><span class="hljs-function">    <span class="hljs-title">get_id</span><span class="hljs-params">()</span> <span class="hljs-keyword">noexcept</span></span><br><span class="hljs-function">    </span>&#123;<br><span class="hljs-meta">#<span class="hljs-keyword">ifdef</span> __GLIBC__</span><br>      <span class="hljs-comment">// For the GNU C library pthread_self() is usable without linking to</span><br>      <span class="hljs-comment">// libpthread.so but returns 0, so we cannot use it in single-threaded</span><br>      <span class="hljs-comment">// programs, because this_thread::get_id() != thread::id&#123;&#125; must be true.</span><br>      <span class="hljs-comment">// We know that pthread_t is an integral type in the GNU C library.</span><br>      <span class="hljs-keyword">if</span> (!__gthread_active_p())<br>	<span class="hljs-keyword">return</span> thread::<span class="hljs-built_in">id</span>(<span class="hljs-number">1</span>);<br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br>      <span class="hljs-keyword">return</span> thread::<span class="hljs-built_in">id</span>(__gthread_self());<br>    &#125;<br><br>    <span class="hljs-comment">/// yield</span><br>    <span class="hljs-function"><span class="hljs-keyword">inline</span> <span class="hljs-type">void</span></span><br><span class="hljs-function">    <span class="hljs-title">yield</span><span class="hljs-params">()</span> <span class="hljs-keyword">noexcept</span></span><br><span class="hljs-function">    </span>&#123;<br><span class="hljs-meta">#<span class="hljs-keyword">ifdef</span> _GLIBCXX_USE_SCHED_YIELD</span><br>      __gthread_yield();<br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br>    &#125;<br><br>    <span class="hljs-type">void</span><br>    __sleep_for(chrono::seconds, chrono::nanoseconds);<br><br>    <span class="hljs-comment">/// sleep_for</span><br>    <span class="hljs-function"><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Rep, <span class="hljs-keyword">typename</span> _Period&gt;</span><br><span class="hljs-function">      <span class="hljs-keyword">inline</span> <span class="hljs-type">void</span></span><br><span class="hljs-function">      <span class="hljs-title">sleep_for</span><span class="hljs-params">(<span class="hljs-type">const</span> chrono::duration&lt;_Rep, _Period&gt;&amp; __rtime)</span></span><br><span class="hljs-function">      </span>&#123;<br>	<span class="hljs-keyword">if</span> (__rtime &lt;= __rtime.<span class="hljs-built_in">zero</span>())<br>	  <span class="hljs-keyword">return</span>;<br>	<span class="hljs-keyword">auto</span> __s = chrono::<span class="hljs-built_in">duration_cast</span>&lt;chrono::seconds&gt;(__rtime);<br>	<span class="hljs-keyword">auto</span> __ns = chrono::<span class="hljs-built_in">duration_cast</span>&lt;chrono::nanoseconds&gt;(__rtime - __s);<br><span class="hljs-meta">#<span class="hljs-keyword">ifdef</span> _GLIBCXX_USE_NANOSLEEP</span><br>	<span class="hljs-type">__gthread_time_t</span> __ts =<br>	  &#123;<br>	    <span class="hljs-built_in">static_cast</span>&lt;std::<span class="hljs-type">time_t</span>&gt;(__s.<span class="hljs-built_in">count</span>()),<br>	    <span class="hljs-built_in">static_cast</span>&lt;<span class="hljs-type">long</span>&gt;(__ns.<span class="hljs-built_in">count</span>())<br>	  &#125;;<br>	<span class="hljs-keyword">while</span> (::<span class="hljs-built_in">nanosleep</span>(&amp;__ts, &amp;__ts) == <span class="hljs-number">-1</span> &amp;&amp; errno == EINTR)<br>	  &#123; &#125;<br><span class="hljs-meta">#<span class="hljs-keyword">else</span></span><br>	__sleep_for(__s, __ns);<br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br>      &#125;<br><br>    <span class="hljs-comment">/// sleep_until</span><br>    <span class="hljs-function"><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Clock, <span class="hljs-keyword">typename</span> _Duration&gt;</span><br><span class="hljs-function">      <span class="hljs-keyword">inline</span> <span class="hljs-type">void</span></span><br><span class="hljs-function">      <span class="hljs-title">sleep_until</span><span class="hljs-params">(<span class="hljs-type">const</span> chrono::time_point&lt;_Clock, _Duration&gt;&amp; __atime)</span></span><br><span class="hljs-function">      </span>&#123;<br>	<span class="hljs-keyword">auto</span> __now = _Clock::<span class="hljs-built_in">now</span>();<br>	<span class="hljs-keyword">if</span> (_Clock::is_steady)<br>	  &#123;<br>	    <span class="hljs-keyword">if</span> (__now &lt; __atime)<br>	      <span class="hljs-built_in">sleep_for</span>(__atime - __now);<br>	    <span class="hljs-keyword">return</span>;<br>	  &#125;<br>	<span class="hljs-keyword">while</span> (__now &lt; __atime)<br>	  &#123;<br>	    <span class="hljs-built_in">sleep_for</span>(__atime - __now);<br>	    __now = _Clock::<span class="hljs-built_in">now</span>();<br>	  &#125;<br>      &#125;<br>  &#125;<br></code></pre></td></tr></table></figure>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E7%BB%86%E8%AF%B4CPP%E6%A0%87%E5%87%86%E5%92%8Cstl%E6%BA%90%E7%A0%81/" class="category-chain-item">细说CPP标准和stl源码</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/C/">#C++</a>
+      
+        <a href="/tags/%E7%BB%86%E8%AF%B4std%E6%BA%90%E7%A0%81/">#细说std源码</a>
+      
+        <a href="/tags/%E7%BA%BF%E7%A8%8B/">#线程</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>C++thread源码分析</div>
+      <div>https://zzidun.tech/770726c0/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>zzidun pavo</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年1月31日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>zzidun-blog</span></a> <a>powerby</a> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

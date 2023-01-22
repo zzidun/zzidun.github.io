@@ -1,0 +1,765 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/logo.png">
+  <link rel="icon" href="/img/logo.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="zzidun pavo">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="宏 12345678910#ifndef _GLIBCXX_TYPE_TRAITS#define _GLIBCXX_TYPE_TRAITS 1#pragma GCC system_header#if __cplusplus &lt; 201103L# include &lt;bits&#x2F;c++0x_warning.h&gt;#else#include &lt;bits&#x2F;c++config.h&amp;g">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C++ type traits 源码分析">
+<meta property="og:url" content="https://zzidun.tech/ae6bf35b/index.html">
+<meta property="og:site_name" content="zzidun blog">
+<meta property="og:description" content="宏 12345678910#ifndef _GLIBCXX_TYPE_TRAITS#define _GLIBCXX_TYPE_TRAITS 1#pragma GCC system_header#if __cplusplus &lt; 201103L# include &lt;bits&#x2F;c++0x_warning.h&gt;#else#include &lt;bits&#x2F;c++config.h&amp;g">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-03-05T14:31:08.000Z">
+<meta property="article:modified_time" content="2023-01-22T03:04:00.318Z">
+<meta property="article:author" content="zzidun pavo">
+<meta property="article:tag" content="C++">
+<meta property="article:tag" content="细说std源码">
+<meta property="article:tag" content="模板元编程">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>C++ type traits 源码分析 | zzidun blog</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"zzidun.tech","root":"/","version":"1.9.4","typing":{"enable":false,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/atom.xml" title="zzidun blog" type="application/atom+xml">
+</head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>zzidun&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/4.webp') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle">C++ type traits 源码分析</span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-03-05 14:31" pubdate>
+          2022年3月5日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          13k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          105 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">C++ type traits 源码分析</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <span id="more"></span>
+<h2 id="宏"><a class="markdownIt-Anchor" href="#宏"></a> 宏</h2>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">ifndef</span> _GLIBCXX_TYPE_TRAITS</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> _GLIBCXX_TYPE_TRAITS 1</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">pragma</span> GCC system_header</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">if</span> __cplusplus &lt; 201103L</span><br><span class="hljs-meta"># <span class="hljs-keyword">include</span> <span class="hljs-string">&lt;bits/c++0x_warning.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">else</span></span><br><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;bits/c++config.h&gt;</span></span><br></code></pre></td></tr></table></figure>
+<p>首先定义一个宏<code>_GLIBCXX_TYPE_TRAITS</code>,以便在重复包含的时候不会出问题.</p>
+<p><code>#pragma GCC system_header</code>表示编译器将会像对待系统库那样对待这个文件(也就是这个文件可能不符合标准,但是不要警告).</p>
+<p>如果当前版本小于c++11(也就是<code>__cplusplus &lt; 201103L</code>),那么<code>type_traits</code>只会包含一个<code>bits/c++0x_warning.h</code>,这个头文件里有一些警告信息.</p>
+<p><code>bits/c++config.h</code>中定义了一些宏,日后细说.</p>
+<h2 id="命名空间"><a class="markdownIt-Anchor" href="#命名空间"></a> 命名空间</h2>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">namespace</span> std _GLIBCXX_VISIBILITY(<span class="hljs-keyword">default</span>)<br>&#123;<br>_GLIBCXX_BEGIN_NAMESPACE_VERSION<br></code></pre></td></tr></table></figure>
+<p>这里出现的两个宏的定义位于上面所说的<code>bits/c++config.h</code>中.</p>
+<p><code>_GLIBCXX_VISIBILITY</code>用于改变命名空间可见性.</p>
+<p>如果<code>_GLIBCXX_INLINE_VERSION</code>的值不为<code>0</code>,<code>_GLIBCXX_BEGIN_NAMESPACE_VERSION</code>会在这个位置再定义一个命名空间,用来包住后面的定义.</p>
+<p><code>_GLIBCXX_INLINE_VERSION</code>默认是<code>0</code>的,这时候<code>_GLIBCXX_BEGIN_NAMESPACE_VERSION</code>宏是空的.</p>
+<h2 id="前向声明"><a class="markdownIt-Anchor" href="#前向声明"></a> 前向声明</h2>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span>... _Elements&gt;<br>  <span class="hljs-keyword">class</span> <span class="hljs-title class_">tuple</span>;<br><br><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>  <span class="hljs-keyword">class</span> <span class="hljs-title class_">reference_wrapper</span>;<br></code></pre></td></tr></table></figure>
+<p>这里前向声明了两个定义在其他头文件里的类,从而不用包含这两个类所在的头文件.</p>
+<p>这两个类所在的头文件也包含了<code>type_traits</code>,因此<code>type_traits</code>不能再去包含他们.</p>
+<h2 id="integral_constant"><a class="markdownIt-Anchor" href="#integral_constant"></a> integral_constant</h2>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs cpp">  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp, _Tp __v&gt;<br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">integral_constant</span><br>    &#123;<br>      <span class="hljs-type">static</span> <span class="hljs-keyword">constexpr</span> _Tp                  value = __v;<br>      <span class="hljs-keyword">typedef</span> _Tp                           value_type;<br>      <span class="hljs-keyword">typedef</span> integral_constant&lt;_Tp, __v&gt;   type;<br>      <span class="hljs-function"><span class="hljs-keyword">constexpr</span> <span class="hljs-keyword">operator</span> <span class="hljs-title">value_type</span><span class="hljs-params">()</span> <span class="hljs-type">const</span> <span class="hljs-keyword">noexcept</span> </span>&#123; <span class="hljs-keyword">return</span> value; &#125;<br><span class="hljs-meta">#<span class="hljs-keyword">if</span> __cplusplus &gt; 201103L</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> __cpp_lib_integral_constant_callable 201304</span><br><br>      <span class="hljs-function"><span class="hljs-keyword">constexpr</span> value_type <span class="hljs-title">operator</span><span class="hljs-params">()</span><span class="hljs-params">()</span> <span class="hljs-type">const</span> <span class="hljs-keyword">noexcept</span> </span>&#123; <span class="hljs-keyword">return</span> value; &#125;<br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br>    &#125;;<br></code></pre></td></tr></table></figure>
+<h3 id="数据成员"><a class="markdownIt-Anchor" href="#数据成员"></a> 数据成员</h3>
+<p>这个结构体定义了变量<code>value = __v</code>,这是一个<code>constexpr static</code>修饰的数据成员变量.</p>
+<p>在C++17之后,这样<code>constexpr</code>修饰的静态成员变量可以在类定义语句内初始化.</p>
+<p>在C++标准文档中有这样一句话</p>
+<blockquote>
+<p>A function or static data member declared with the constexpr or consteval specifier is implicitly an inline function or variable<br />
+被constexpr或consteval修饰的函数或则静态数据成员视为隐式地被inline修饰.</p>
+</blockquote>
+<p>也就是这么做效果等同<code>inline</code>.</p>
+<p>C++17之后可以给静态数据成员加上<code>inline</code>,使得他可以直接在类定义语句内初始化.</p>
+<p>接下来是将<code>_Tp</code>定义为<code>value_type</code>,将自身类型定义为<code>type</code>.</p>
+<h3 id="函数成员"><a class="markdownIt-Anchor" href="#函数成员"></a> 函数成员</h3>
+<h4 id="operator-value_type"><a class="markdownIt-Anchor" href="#operator-value_type"></a> operator value_type()</h4>
+<p>如果将类型<code>integral_constant&lt;_Tp, __v&gt;</code>的对象转换为<code>_Tp</code>类型,那么将会调用<code>operator value_type()</code>函数,返回一个<code>_Tp</code>类型的<code>value</code>.</p>
+<p>如果有类似这样的语句</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-type">int</span> i = <span class="hljs-built_in">int</span>(<span class="hljs-built_in">integral_constant</span>&lt;<span class="hljs-type">int</span>,<span class="hljs-number">1</span>&gt;())<br></code></pre></td></tr></table></figure>
+<p>因为这时候<code>value_type</code>为<code>int</code>,那么这个类将会有一个函数成员<code>operator int()</code>.</p>
+<p>例如上面的语句会返回<code>int</code>类型的<code>1</code>.</p>
+<h4 id="operator"><a class="markdownIt-Anchor" href="#operator"></a> operator()()</h4>
+<p>如果有一个<code>integral_constant&lt;_Tp, __v&gt;</code>类型的对象<code>a</code>,当我们使用<code>a()</code>时,将会调用<code>operator()()</code>.</p>
+<p>这里的<code>operator()()</code>直接返回了<code>value</code>.</p>
+<p>例如,下面的语句,将会返回一个<code>int</code>类型的<code>1</code>.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-built_in">integral_constant</span>&lt;<span class="hljs-type">int</span>, <span class="hljs-number">1</span>&gt;()()<br></code></pre></td></tr></table></figure>
+<h3 id="静态成员定义"><a class="markdownIt-Anchor" href="#静态成员定义"></a> 静态成员定义</h3>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp, _Tp __v&gt;<br>  <span class="hljs-keyword">constexpr</span> _Tp integral_constant&lt;_Tp, __v&gt;::value;<br></code></pre></td></tr></table></figure>
+<p>如果C++版本小于17,那么还是需要在类定义语句之外使用这个语句来定义<code>value</code>.</p>
+<p>在C++标准中有这样一段话</p>
+<blockquote>
+<p>在类定义中的非内联静态数据成员并未被定义,他可能是除<code>cv void</code>以外的未完成类型</p>
+</blockquote>
+<p>因此我们需要在类的外面定义他.</p>
+<h3 id="常用类型定义"><a class="markdownIt-Anchor" href="#常用类型定义"></a> 常用类型定义</h3>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs cpp">  <span class="hljs-comment">/// The type used as a compile-time boolean with true value.</span><br>  <span class="hljs-keyword">using</span> true_type =  integral_constant&lt;<span class="hljs-type">bool</span>, <span class="hljs-literal">true</span>&gt;;<br><br>  <span class="hljs-comment">/// The type used as a compile-time boolean with false value.</span><br>  <span class="hljs-keyword">using</span> false_type = integral_constant&lt;<span class="hljs-type">bool</span>, <span class="hljs-literal">false</span>&gt;;<br><br>  <span class="hljs-comment">/// @cond undocumented</span><br>  <span class="hljs-comment">/// bool_constant for C++11</span><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-type">bool</span> __v&gt;<br>    <span class="hljs-keyword">using</span> __bool_constant = integral_constant&lt;<span class="hljs-type">bool</span>, __v&gt;;<br>  <span class="hljs-comment">/// @endcond</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">if</span> __cplusplus &gt;= 201703L</span><br><span class="hljs-meta"># <span class="hljs-keyword">define</span> __cpp_lib_bool_constant 201505</span><br>  <span class="hljs-comment">/// Alias template for compile-time boolean constant types.</span><br>  <span class="hljs-comment">/// @since C++17</span><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-type">bool</span> __v&gt;<br>    <span class="hljs-keyword">using</span> bool_constant = integral_constant&lt;<span class="hljs-type">bool</span>, __v&gt;;<br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br></code></pre></td></tr></table></figure>
+<p>这里使用<code>using</code>重命名了几个特定类型的<code>integral_constant</code>.</p>
+<p>其中<code>false_type</code>和<code>true_type</code>非常常用,他们是模板元编程的基石之一.</p>
+<h2 id="conditional"><a class="markdownIt-Anchor" href="#conditional"></a> conditional</h2>
+<p>这里是一个前向定义.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">template</span>&lt;<span class="hljs-type">bool</span>, <span class="hljs-keyword">typename</span>, <span class="hljs-keyword">typename</span>&gt;<br>  <span class="hljs-keyword">struct</span> <span class="hljs-title class_">conditional</span>;<br></code></pre></td></tr></table></figure>
+<p>他的实现也在同一个文件中.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">template</span>&lt;<span class="hljs-type">bool</span> _Cond, <span class="hljs-keyword">typename</span> _Iftrue, <span class="hljs-keyword">typename</span> _Iffalse&gt;<br>  <span class="hljs-keyword">struct</span> <span class="hljs-title class_">conditional</span><br>  &#123; <span class="hljs-keyword">typedef</span> _Iftrue type; &#125;;<br><br><span class="hljs-comment">// Partial specialization for false.</span><br><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Iftrue, <span class="hljs-keyword">typename</span> _Iffalse&gt;<br>  <span class="hljs-keyword">struct</span> <span class="hljs-title class_">conditional</span>&lt;<span class="hljs-literal">false</span>, _Iftrue, _Iffalse&gt;<br>  &#123; <span class="hljs-keyword">typedef</span> _Iffalse type; &#125;;<br></code></pre></td></tr></table></figure>
+<p>以上代码根据<code>bool _Cond</code>的值,来决定<code>conditional::type</code>.</p>
+<p>首先定义一个默认模板类,无论如何都把<code>type</code>定义为<code>_Iftrue</code>.</p>
+<p>然后特化这个模板,当<code>_Cond</code>传入<code>false</code>的时候,把<code>type</code>定义为<code>_Iffalse</code>.</p>
+<p>上述的<code>conditonal</code>的第一个模板参数<code>_Cond</code>其实很有说法.</p>
+<p>如果我们直接传布尔值,或者传一个很简单的表达式,那就浪费了这个精巧的结构.</p>
+<p>为此,C++定义了<code>__or_</code>, <code>__and_</code>,<code>__not_</code>结构体,来实现复杂的判断.</p>
+<h2 id="__type_identity"><a class="markdownIt-Anchor" href="#__type_identity"></a> __type_identity</h2>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> _Type&gt;<br>  <span class="hljs-keyword">struct</span> <span class="hljs-title class_">__type_identity</span><br>  &#123; <span class="hljs-keyword">using</span> type = _Type; &#125;;<br><br><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>  <span class="hljs-keyword">using</span> <span class="hljs-type">__type_identity_t</span> = <span class="hljs-keyword">typename</span> __type_identity&lt;_Tp&gt;::type;<br></code></pre></td></tr></table></figure>
+<p>这里定义了一个结构体<code>__type_identity</code>,这个结构体内部只是把模板参数中的<code>_Type</code>命名为<code>type</code>.</p>
+<p>然后就是定义一个<code>__type_identity_t</code>,以便使用这个<code>type</code>.</p>
+<h2 id="逻辑运算"><a class="markdownIt-Anchor" href="#逻辑运算"></a> 逻辑运算</h2>
+<p>这几个逻辑运算也是模板元编程中非常关键的一点,他们给模板带来了逻辑.</p>
+<h3 id="__or_"><a class="markdownIt-Anchor" href="#__or_"></a> __or_</h3>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span>...&gt;<br>  <span class="hljs-keyword">struct</span> <span class="hljs-title class_">__or_</span>;<br><br><span class="hljs-keyword">template</span>&lt;&gt;<br>  <span class="hljs-keyword">struct</span> <span class="hljs-title class_">__or_</span>&lt;&gt;<br>  : <span class="hljs-keyword">public</span> false_type<br>  &#123; &#125;;<br><br><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _B1&gt;<br>  <span class="hljs-keyword">struct</span> <span class="hljs-title class_">__or_</span>&lt;_B1&gt;<br>  : <span class="hljs-keyword">public</span> _B1<br>  &#123; &#125;;<br><br><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _B1, <span class="hljs-keyword">typename</span> _B2&gt;<br>  <span class="hljs-keyword">struct</span> <span class="hljs-title class_">__or_</span>&lt;_B1, _B2&gt;<br>  : <span class="hljs-keyword">public</span> conditional&lt;_B1::value, _B1, _B2&gt;::type<br>  &#123; &#125;;<br><br><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _B1, <span class="hljs-keyword">typename</span> _B2, <span class="hljs-keyword">typename</span> _B3, <span class="hljs-keyword">typename</span>... _Bn&gt;<br>  <span class="hljs-keyword">struct</span> <span class="hljs-title class_">__or_</span>&lt;_B1, _B2, _B3, _Bn...&gt;<br>  : <span class="hljs-keyword">public</span> conditional&lt;_B1::value, _B1, __or_&lt;_B2, _B3, _Bn...&gt;&gt;::type<br>  &#123; &#125;;<br></code></pre></td></tr></table></figure>
+<h4 id="__or_-2"><a class="markdownIt-Anchor" href="#__or_-2"></a> __or_&lt;&gt;</h4>
+<p>当我们不给<code>__or_</code>传模板参数时,他就会直接继承一个<code>false_type</code>.</p>
+<p>这时候这个<code>__or_</code>的<code>value</code>成员就是<code>false</code>.</p>
+<p>也就是说以下代码:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs cpp">std::__or_&lt;&gt; empty_or;<br>std::cout &lt;&lt; empty_or.value &lt;&lt; std::endl;<br></code></pre></td></tr></table></figure>
+<p>会输出<code>0</code>.</p>
+<h4 id="__or__b1"><a class="markdownIt-Anchor" href="#__or__b1"></a> __or_&lt;_B1&gt;</h4>
+<p>当<code>__or_</code>接受一个模板参数的时候,他直接继承这个这个模板参数.</p>
+<p>也就是如果这个参数继承了<code>true_type</code>,也就是<code>_B1::value</code>为<code>true</code>,那么<code>__or_</code>就会继承<code>_B1</code>,这时候<code>value</code>成员就会是<code>true</code>.</p>
+<p>同理,如果这个参数继承了<code>false_type</code>,那么<code>__or_</code>就继承<code>_B1</code>之后,<code>value</code>成员就会是<code>false</code>.</p>
+<p>这非常符合<code>or</code>的特征,当只接收一个布尔值时,计算结果就是这个布尔值.</p>
+<h4 id="__or__b1-_b2"><a class="markdownIt-Anchor" href="#__or__b1-_b2"></a> __or_&lt;_B1, _B2&gt;</h4>
+<p>如果<code>_B1::value</code>为<code>true</code>,那么<code>conditional&lt;_B1::value, _B1, _B2&gt;::type</code>将会返回<code>_B1</code>.</p>
+<p>那么<code>__or_</code>直接继承<code>_B1</code>,短路掉<code>_B2</code>.</p>
+<p>这时候<code>value</code>就是<code>true.</code></p>
+<p>否则就继承<code>_B2</code>.</p>
+<p>继承<code>_B2</code>之后,<code>__or_</code>的<code>value</code>取决于<code>_B2::value</code>.</p>
+<p>这和<code>or</code>运算的表现一模一样.</p>
+<p>这就相当于<code>_B1 || (_B2)</code>.</p>
+<h4 id="__or__b1-_b2-_b3-_bn"><a class="markdownIt-Anchor" href="#__or__b1-_b2-_b3-_bn"></a> __or_&lt;_B1, _B2, _B3, _Bn…&gt;</h4>
+<p>这里将传入的模板参数全部展开,就像这样</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs cpp">conditional&lt;_B1::value, _B1, __or_&lt;_B2, _B3, _B4&gt;&gt;::type<br><span class="hljs-comment">//展开一次</span><br>conditional&lt;_B1::value, _B1, conditional&lt;_B2::value, _B2, __or_&lt;_B3, _B4&gt;&gt;&gt;::type<br><span class="hljs-comment">//再展开一次</span><br>conditional&lt;_B1::value, _B1, conditional&lt;_B2::value, _B2, conditional&lt;_B3::type, _B3, _B4&gt;&gt;&gt;::type<br></code></pre></td></tr></table></figure>
+<p>这就像是<code>_B1 || (_B2 || (_B3 || _B4))</code>.</p>
+<p>一旦有一个符合,<code>value</code>就会是<code>true</code>.</p>
+<h3 id="__and_"><a class="markdownIt-Anchor" href="#__and_"></a> __and_</h3>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span>...&gt;<br>  <span class="hljs-keyword">struct</span> <span class="hljs-title class_">__and_</span>;<br><br><span class="hljs-keyword">template</span>&lt;&gt;<br>  <span class="hljs-keyword">struct</span> <span class="hljs-title class_">__and_</span>&lt;&gt;<br>  : <span class="hljs-keyword">public</span> true_type<br>  &#123; &#125;;<br><br><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _B1&gt;<br>  <span class="hljs-keyword">struct</span> <span class="hljs-title class_">__and_</span>&lt;_B1&gt;<br>  : <span class="hljs-keyword">public</span> _B1<br>  &#123; &#125;;<br><br><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _B1, <span class="hljs-keyword">typename</span> _B2&gt;<br>  <span class="hljs-keyword">struct</span> <span class="hljs-title class_">__and_</span>&lt;_B1, _B2&gt;<br>  : <span class="hljs-keyword">public</span> conditional&lt;_B1::value, _B2, _B1&gt;::type<br>  &#123; &#125;;<br><br><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _B1, <span class="hljs-keyword">typename</span> _B2, <span class="hljs-keyword">typename</span> _B3, <span class="hljs-keyword">typename</span>... _Bn&gt;<br>  <span class="hljs-keyword">struct</span> <span class="hljs-title class_">__and_</span>&lt;_B1, _B2, _B3, _Bn...&gt;<br>  : <span class="hljs-keyword">public</span> conditional&lt;_B1::value, __and_&lt;_B2, _B3, _Bn...&gt;, _B1&gt;::type<br>  &#123; &#125;;<br></code></pre></td></tr></table></figure>
+<p>不传入模板参数的时候,直接继承<code>true_type</code>.</p>
+<p>传入一个模板参数的时候,也是直接继承<code>_B1</code>.</p>
+<p>传入两个模板参数的时候,如果<code>_B1</code>为<code>false</code>,那么直接继承<code>_B1</code>; 否则继承<code>_B2</code>,这时候<code>__and_</code>的值取决于<code>_B2</code>.</p>
+<p>后面的展开也和上面同理,相当于展开成<code>_B1 &amp;&amp; (_B2 &amp;&amp; (_B3 &amp;&amp; ...))</code>.</p>
+<h3 id="__not_"><a class="markdownIt-Anchor" href="#__not_"></a> __not_</h3>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Pp&gt;<br>  <span class="hljs-keyword">struct</span> <span class="hljs-title class_">__not_</span><br>  : <span class="hljs-keyword">public</span> __bool_constant&lt;!<span class="hljs-built_in">bool</span>(_Pp::value)&gt;<br>  &#123; &#125;;<br></code></pre></td></tr></table></figure>
+<p>这里就简单很多直接对传入模板参数的<code>value</code>取反,然后继承一个<code>__bool_constant</code>.</p>
+<h3 id="快捷方式"><a class="markdownIt-Anchor" href="#快捷方式"></a> 快捷方式</h3>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">if</span> __cplusplus &gt;= 201703L</span><br><br>  <span class="hljs-comment">/// @cond undocumented</span><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span>... _Bn&gt;<br>    <span class="hljs-keyword">inline</span> <span class="hljs-keyword">constexpr</span> <span class="hljs-type">bool</span> __or_v = __or_&lt;_Bn...&gt;::value;<br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span>... _Bn&gt;<br>    <span class="hljs-keyword">inline</span> <span class="hljs-keyword">constexpr</span> <span class="hljs-type">bool</span> __and_v = __and_&lt;_Bn...&gt;::value;<br><br>	<span class="hljs-meta">#<span class="hljs-keyword">define</span> __cpp_lib_logical_traits 201510</span><br><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span>... _Bn&gt;<br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">conjunction</span><br>    : __and_&lt;_Bn...&gt;<br>    &#123; &#125;;<br><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span>... _Bn&gt;<br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">disjunction</span><br>    : __or_&lt;_Bn...&gt;<br>    &#123; &#125;;<br><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Pp&gt;<br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">negation</span><br>    : __not_&lt;_Pp&gt;<br>    &#123; &#125;;<br><br>	<span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span>... _Bn&gt;<br>    <span class="hljs-keyword">inline</span> <span class="hljs-keyword">constexpr</span> <span class="hljs-type">bool</span> conjunction_v = conjunction&lt;_Bn...&gt;::value;<br><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span>... _Bn&gt;<br>    <span class="hljs-keyword">inline</span> <span class="hljs-keyword">constexpr</span> <span class="hljs-type">bool</span> disjunction_v = disjunction&lt;_Bn...&gt;::value;<br><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Pp&gt;<br>    <span class="hljs-keyword">inline</span> <span class="hljs-keyword">constexpr</span> <span class="hljs-type">bool</span> negation_v = negation&lt;_Pp&gt;::value;<br><br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br></code></pre></td></tr></table></figure>
+<p>这里定义了<code>inline constexpr</code>的变量<code>__or_v</code>和<code>__and_v</code>,可以方便地访问<code>value</code>.</p>
+<p>目前<code>constexpr</code>模板变量直接写在头文件里没有关系,因为他没有外部链接,但是以后可能会有问题.</p>
+<p>加上<code>inline</code>的变量可以定义在头文件里,然后被其他文件包含也不会出问题.</p>
+<h2 id="类型判断"><a class="markdownIt-Anchor" href="#类型判断"></a> 类型判断</h2>
+<p>类型判断的模板类我打乱顺序来讲,但是这样更加易于理解.</p>
+<h3 id="is_reference"><a class="markdownIt-Anchor" href="#is_reference"></a> is_reference</h3>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span>&gt;<br>   <span class="hljs-keyword">struct</span> <span class="hljs-title class_">is_lvalue_reference</span><br>   : <span class="hljs-keyword">public</span> false_type &#123; &#125;;<br><br> <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>   <span class="hljs-keyword">struct</span> <span class="hljs-title class_">is_lvalue_reference</span>&lt;_Tp&amp;&gt;<br>   : <span class="hljs-keyword">public</span> true_type &#123; &#125;;<br><br> <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span>&gt;<br>   <span class="hljs-keyword">struct</span> <span class="hljs-title class_">is_rvalue_reference</span><br>   : <span class="hljs-keyword">public</span> false_type &#123; &#125;;<br><br> <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>   <span class="hljs-keyword">struct</span> <span class="hljs-title class_">is_rvalue_reference</span>&lt;_Tp&amp;&amp;&gt;<br>   : <span class="hljs-keyword">public</span> true_type &#123; &#125;;<br><br> <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>   <span class="hljs-keyword">struct</span> <span class="hljs-title class_">is_reference</span><br>   : <span class="hljs-keyword">public</span> __or_&lt;is_lvalue_reference&lt;_Tp&gt;,<br>                  is_rvalue_reference&lt;_Tp&gt;&gt;::type<br>   &#123; &#125;;<br></code></pre></td></tr></table></figure>
+<p>这里用来判断<code>_Tp</code>是否引用类型,如果了解模板的匹配就会知道,如果是左值或则右值引用,就会继承<code>true_type</code>.</p>
+<p>不必多说,很简单.</p>
+<h3 id="is_const"><a class="markdownIt-Anchor" href="#is_const"></a> is_const</h3>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">/// is_const</span><br><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span>&gt;<br>  <span class="hljs-keyword">struct</span> <span class="hljs-title class_">is_const</span><br>  : <span class="hljs-keyword">public</span> false_type &#123; &#125;;<br><br><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>  <span class="hljs-keyword">struct</span> <span class="hljs-title class_">is_const</span>&lt;_Tp <span class="hljs-type">const</span>&gt;<br>  : <span class="hljs-keyword">public</span> true_type &#123; &#125;;<br></code></pre></td></tr></table></figure>
+<p>这也同理,如果带有<code>const</code>就会选择第二个特化.</p>
+<h3 id="is_function"><a class="markdownIt-Anchor" href="#is_function"></a> is_function</h3>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>  <span class="hljs-keyword">struct</span> <span class="hljs-title class_">is_function</span><br>  : <span class="hljs-keyword">public</span> __bool_constant&lt;!is_const&lt;<span class="hljs-type">const</span> _Tp&gt;::value&gt; &#123; &#125;;<br><br><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>  <span class="hljs-keyword">struct</span> <span class="hljs-title class_">is_function</span>&lt;_Tp&amp;&gt;<br>  : <span class="hljs-keyword">public</span> false_type &#123; &#125;;<br><br><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>  <span class="hljs-keyword">struct</span> <span class="hljs-title class_">is_function</span>&lt;_Tp&amp;&amp;&gt;<br>  : <span class="hljs-keyword">public</span> false_type &#123; &#125;;<br></code></pre></td></tr></table></figure>
+<p>如果在<code>_Tp</code>的前面加上<code>const</code>之后,<code>_Tp</code>的类型不为<code>const</code>,那么这个类型就是一个函数.</p>
+<p>这里非常巧妙.</p>
+<p>我们知道,在函数前面加上<code>const</code>,他只是变成了一个返回<code>const</code>类型的函数.</p>
+<h3 id="is_void"><a class="markdownIt-Anchor" href="#is_void"></a> is_void</h3>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><br><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>  <span class="hljs-keyword">using</span> <span class="hljs-type">__remove_cv_t</span> = <span class="hljs-keyword">typename</span> remove_cv&lt;_Tp&gt;::type;<br><br><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span>&gt;<br>  <span class="hljs-keyword">struct</span> <span class="hljs-title class_">__is_void_helper</span><br>  : <span class="hljs-keyword">public</span> false_type &#123; &#125;;<br><br><span class="hljs-keyword">template</span>&lt;&gt;<br>  <span class="hljs-keyword">struct</span> <span class="hljs-title class_">__is_void_helper</span>&lt;<span class="hljs-type">void</span>&gt;<br>  : <span class="hljs-keyword">public</span> true_type &#123; &#125;;<br><br><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>  <span class="hljs-keyword">struct</span> <span class="hljs-title class_">is_void</span><br>  : <span class="hljs-keyword">public</span> __is_void_helper&lt;<span class="hljs-type">__remove_cv_t</span>&lt;_Tp&gt;&gt;::type<br>  &#123; &#125;;<br></code></pre></td></tr></table></figure>
+<p><code>__remove_cv_t</code>作用是将<code>_Tp</code>的<code>const</code>和<code>volatile</code>修饰符去掉(如果有的话).后面会提到他的实现</p>
+<p>然后直接和<code>void</code>类型对比,作出判断.</p>
+<h2 id="类型操作"><a class="markdownIt-Anchor" href="#类型操作"></a> 类型操作</h2>
+<h3 id="修改const和volatile"><a class="markdownIt-Anchor" href="#修改const和volatile"></a> 修改const和volatile</h3>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br></pre></td><td class="code"><pre><code class="hljs cpp">  <span class="hljs-comment">// Const-volatile modifications.</span><br><br>  <span class="hljs-comment">/// remove_const</span><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">remove_const</span><br>    &#123; <span class="hljs-keyword">typedef</span> _Tp     type; &#125;;<br><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">remove_const</span>&lt;_Tp <span class="hljs-type">const</span>&gt;<br>    &#123; <span class="hljs-keyword">typedef</span> _Tp     type; &#125;;<br><br>  <span class="hljs-comment">/// remove_volatile</span><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">remove_volatile</span><br>    &#123; <span class="hljs-keyword">typedef</span> _Tp     type; &#125;;<br><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">remove_volatile</span>&lt;_Tp <span class="hljs-keyword">volatile</span>&gt;<br>    &#123; <span class="hljs-keyword">typedef</span> _Tp     type; &#125;;<br><br>  <span class="hljs-comment">/// remove_cv</span><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">remove_cv</span><br>    &#123; <span class="hljs-keyword">using</span> type = _Tp; &#125;;<br><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">remove_cv</span>&lt;<span class="hljs-type">const</span> _Tp&gt;<br>    &#123; <span class="hljs-keyword">using</span> type = _Tp; &#125;;<br><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">remove_cv</span>&lt;<span class="hljs-keyword">volatile</span> _Tp&gt;<br>    &#123; <span class="hljs-keyword">using</span> type = _Tp; &#125;;<br><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">remove_cv</span>&lt;<span class="hljs-type">const</span> <span class="hljs-keyword">volatile</span> _Tp&gt;<br>    &#123; <span class="hljs-keyword">using</span> type = _Tp; &#125;;<br><br>  <span class="hljs-comment">/// add_const</span><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">add_const</span><br>    &#123; <span class="hljs-keyword">typedef</span> _Tp <span class="hljs-type">const</span>     type; &#125;;<br><br>  <span class="hljs-comment">/// add_volatile</span><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">add_volatile</span><br>    &#123; <span class="hljs-keyword">typedef</span> _Tp <span class="hljs-keyword">volatile</span>     type; &#125;;<br><br>  <span class="hljs-comment">/// add_cv</span><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">add_cv</span><br>    &#123;<br>      <span class="hljs-keyword">typedef</span> <span class="hljs-keyword">typename</span><br>      add_const&lt;<span class="hljs-keyword">typename</span> add_volatile&lt;_Tp&gt;::type&gt;::type     type;<br>    &#125;;<br><br><span class="hljs-meta">#<span class="hljs-keyword">if</span> __cplusplus &gt; 201103L</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> __cpp_lib_transformation_trait_aliases 201304</span><br><br>  <span class="hljs-comment">/// Alias template for remove_const</span><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>    <span class="hljs-keyword">using</span> <span class="hljs-type">remove_const_t</span> = <span class="hljs-keyword">typename</span> remove_const&lt;_Tp&gt;::type;<br><br>  <span class="hljs-comment">/// Alias template for remove_volatile</span><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>    <span class="hljs-keyword">using</span> <span class="hljs-type">remove_volatile_t</span> = <span class="hljs-keyword">typename</span> remove_volatile&lt;_Tp&gt;::type;<br><br>  <span class="hljs-comment">/// Alias template for remove_cv</span><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>    <span class="hljs-keyword">using</span> <span class="hljs-type">remove_cv_t</span> = <span class="hljs-keyword">typename</span> remove_cv&lt;_Tp&gt;::type;<br><br>  <span class="hljs-comment">/// Alias template for add_const</span><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>    <span class="hljs-keyword">using</span> <span class="hljs-type">add_const_t</span> = <span class="hljs-keyword">typename</span> add_const&lt;_Tp&gt;::type;<br><br>  <span class="hljs-comment">/// Alias template for add_volatile</span><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>    <span class="hljs-keyword">using</span> <span class="hljs-type">add_volatile_t</span> = <span class="hljs-keyword">typename</span> add_volatile&lt;_Tp&gt;::type;<br><br>  <span class="hljs-comment">/// Alias template for add_cv</span><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>    <span class="hljs-keyword">using</span> <span class="hljs-type">add_cv_t</span> = <span class="hljs-keyword">typename</span> add_cv&lt;_Tp&gt;::type;<br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br></code></pre></td></tr></table></figure>
+<p>操作非常简单,接收特定类型之后在模板类内部定义一个自己想用的版本就可以了.</p>
+<h3 id="修改引用类型"><a class="markdownIt-Anchor" href="#修改引用类型"></a> 修改引用类型</h3>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><code class="hljs cpp">  <span class="hljs-comment">/// remove_reference</span><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">remove_reference</span><br>    &#123; <span class="hljs-keyword">typedef</span> _Tp   type; &#125;;<br><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">remove_reference</span>&lt;_Tp&amp;&gt;<br>    &#123; <span class="hljs-keyword">typedef</span> _Tp   type; &#125;;<br><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">remove_reference</span>&lt;_Tp&amp;&amp;&gt;<br>    &#123; <span class="hljs-keyword">typedef</span> _Tp   type; &#125;;<br><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp, <span class="hljs-type">bool</span> = __is_referenceable&lt;_Tp&gt;::value&gt;<br>    <span class="hljs-keyword">struct</span> __add_lvalue_reference_helper<br>    &#123; <span class="hljs-keyword">typedef</span> _Tp   type; &#125;;<br><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">__add_lvalue_reference_helper</span>&lt;_Tp, <span class="hljs-literal">true</span>&gt;<br>    &#123; <span class="hljs-keyword">typedef</span> _Tp&amp;   type; &#125;;<br><br>  <span class="hljs-comment">/// add_lvalue_reference</span><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">add_lvalue_reference</span><br>    : <span class="hljs-keyword">public</span> __add_lvalue_reference_helper&lt;_Tp&gt;<br>    &#123; &#125;;<br><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp, <span class="hljs-type">bool</span> = __is_referenceable&lt;_Tp&gt;::value&gt;<br>    <span class="hljs-keyword">struct</span> __add_rvalue_reference_helper<br>    &#123; <span class="hljs-keyword">typedef</span> _Tp   type; &#125;;<br><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">__add_rvalue_reference_helper</span>&lt;_Tp, <span class="hljs-literal">true</span>&gt;<br>    &#123; <span class="hljs-keyword">typedef</span> _Tp&amp;&amp;   type; &#125;;<br><br>  <span class="hljs-comment">/// add_rvalue_reference</span><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>    <span class="hljs-keyword">struct</span> <span class="hljs-title class_">add_rvalue_reference</span><br>    : <span class="hljs-keyword">public</span> __add_rvalue_reference_helper&lt;_Tp&gt;<br>    &#123; &#125;;<br><br><span class="hljs-meta">#<span class="hljs-keyword">if</span> __cplusplus &gt; 201103L</span><br>  <span class="hljs-comment">/// Alias template for remove_reference</span><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>    <span class="hljs-keyword">using</span> <span class="hljs-type">remove_reference_t</span> = <span class="hljs-keyword">typename</span> remove_reference&lt;_Tp&gt;::type;<br><br>  <span class="hljs-comment">/// Alias template for add_lvalue_reference</span><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>    <span class="hljs-keyword">using</span> <span class="hljs-type">add_lvalue_reference_t</span> = <span class="hljs-keyword">typename</span> add_lvalue_reference&lt;_Tp&gt;::type;<br><br>  <span class="hljs-comment">/// Alias template for add_rvalue_reference</span><br>  <span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> _Tp&gt;<br>    <span class="hljs-keyword">using</span> <span class="hljs-type">add_rvalue_reference_t</span> = <span class="hljs-keyword">typename</span> add_rvalue_reference&lt;_Tp&gt;::type;<br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br></code></pre></td></tr></table></figure>
+<p>也是一样.</p>
+<h2 id="更多类型判断"><a class="markdownIt-Anchor" href="#更多类型判断"></a> 更多类型判断</h2>
+<h2 id=""><a class="markdownIt-Anchor" href="#"></a> </h2>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E7%BB%86%E8%AF%B4CPP%E6%A0%87%E5%87%86%E5%92%8Cstl%E6%BA%90%E7%A0%81/" class="category-chain-item">细说CPP标准和stl源码</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/C/">#C++</a>
+      
+        <a href="/tags/%E7%BB%86%E8%AF%B4std%E6%BA%90%E7%A0%81/">#细说std源码</a>
+      
+        <a href="/tags/%E6%A8%A1%E6%9D%BF%E5%85%83%E7%BC%96%E7%A8%8B/">#模板元编程</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>C++ type traits 源码分析</div>
+      <div>https://zzidun.tech/ae6bf35b/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>zzidun pavo</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年3月5日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>zzidun-blog</span></a> <a>powerby</a> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

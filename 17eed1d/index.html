@@ -1,0 +1,777 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/logo.png">
+  <link rel="icon" href="/img/logo.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="zzidun pavo">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="安装时分区注意; 使用tmpfs; 配置vnc和xrdp远程; 快捷方式; 应用商店报错修复; 常用软件安装(go,mariaDB,npm,firefox,安卓模拟器);">
+<meta property="og:type" content="article">
+<meta property="og:title" content="linux桌面使用中的那些事">
+<meta property="og:url" content="https://zzidun.tech/17eed1d/index.html">
+<meta property="og:site_name" content="zzidun blog">
+<meta property="og:description" content="安装时分区注意; 使用tmpfs; 配置vnc和xrdp远程; 快捷方式; 应用商店报错修复; 常用软件安装(go,mariaDB,npm,firefox,安卓模拟器);">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-12-28T20:42:48.000Z">
+<meta property="article:modified_time" content="2023-01-22T03:04:00.321Z">
+<meta property="article:author" content="zzidun pavo">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="anbox">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>linux桌面使用中的那些事 | zzidun blog</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"zzidun.tech","root":"/","version":"1.9.4","typing":{"enable":false,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/atom.xml" title="zzidun blog" type="application/atom+xml">
+</head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>zzidun&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/4.webp') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle">linux桌面使用中的那些事</span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2021-12-28 20:42" pubdate>
+          2021年12月28日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          3.8k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          32 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">linux桌面使用中的那些事</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <ul>
+<li>安装时分区注意;</li>
+<li>使用tmpfs;</li>
+<li>配置vnc和xrdp远程;</li>
+<li>快捷方式;</li>
+<li>应用商店报错修复;</li>
+<li>常用软件安装(go,mariaDB,npm,firefox,安卓模拟器);</li>
+</ul>
+<span id="more"></span>
+<h2 id="制作启动光盘"><a class="markdownIt-Anchor" href="#制作启动光盘"></a> 制作启动光盘</h2>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs routeros">wodim -sao -v <span class="hljs-attribute">-speed</span>=1 <span class="hljs-attribute">dev</span>=/dev/&lt;光盘设备&gt; &lt;iso文件&gt;<br></code></pre></td></tr></table></figure>
+<p>我留意到直接挂载是不能写入的,需要用wodim工具.</p>
+<h2 id="安装时分区注意"><a class="markdownIt-Anchor" href="#安装时分区注意"></a> 安装时分区注意</h2>
+<p>不要用默认分区,不要用默认分区,不要用默认分区.</p>
+<p>比如,<code>deepin</code>默认分区只给根目录分配<code>15G</code>空间,一下子就满了,满了很难搞,非常折磨.</p>
+<p>我的通常分区方式如下</p>
+<table>
+<thead>
+<tr>
+<th>挂在目录</th>
+<th>文件系统</th>
+<th>大小</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/boot/efi</code></td>
+<td><code>fat32</code></td>
+<td><code>100M</code></td>
+</tr>
+<tr>
+<td><code>/</code></td>
+<td><code>ext4</code></td>
+<td><code>其余全部空间</code></td>
+</tr>
+<tr>
+<td><code>&lt;无&gt;</code></td>
+<td><code>linux-swap</code></td>
+<td><code>8G</code></td>
+</tr>
+</tbody>
+</table>
+<p>以前我把<code>/boot</code>独立分区弄得很小(<code>400M</code>),然后某次更新竟然满了,做什么都失败.</p>
+<p>只能进<code>live</code>里面用<code>gparted</code>改分区.</p>
+<p>我其实觉得<code>/boot</code>分区不用单独分出来.</p>
+<p>我心里觉得除非是某些目录需要特殊的文件系统比如<code>efi</code>需要<code>fat32</code>,否则同硬盘分区就是扯蛋:</p>
+<ol>
+<li>文件跨分区移动耗时很长,像是跨硬盘移动一样,哪怕他们实际上在同一个硬盘.</li>
+<li>常常因为分区不合理,导致某一分区满了,其他分区还有很多空间,这时候调整非常麻烦.</li>
+<li>实际上用文件夹就能取得和分区一样的效果,而且没有上面的缺点.</li>
+<li>同一个硬盘的分区不会有什么保险的作用,硬盘损坏依旧是所有分区遭殃.</li>
+</ol>
+<p>可见,我们根本没有理由去划分他.</p>
+<h2 id="移动tmp目录到tmpfs"><a class="markdownIt-Anchor" href="#移动tmp目录到tmpfs"></a> 移动/tmp目录到tmpfs</h2>
+<p><code>/tmp</code>目录是缓存文件的目录,开关机就会被系统删除.</p>
+<p>这东西显然应该放到内存,还能更快存取.实在没有必要放到硬盘.</p>
+<p>编辑<code>/etc/fstab</code>文件,后面加上以下内容</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell">tmpfs /tmp tmpfs defaults 0 0<br>tmpfs /var/tmp tmpfs defaults 0 0<br></code></pre></td></tr></table></figure>
+<h2 id="配置远程桌面"><a class="markdownIt-Anchor" href="#配置远程桌面"></a> 配置远程桌面</h2>
+<a href="/70069604/" title="deepin开启远程桌面服务,使用vnc和rdp连接deepin">deepin开启远程桌面服务,使用vnc和rdp连接deepin</a>
+<p>其他系统可以看这个<a target="_blank" rel="noopener" href="https://www.hiroom2.com/ubuntu-2004-xrdp-kde-en">链接</a></p>
+<h2 id="指定软件版本"><a class="markdownIt-Anchor" href="#指定软件版本"></a> 指定软件版本</h2>
+<p>有时候我们可以同时安装多个版本的<code>gcc</code>,这时候可以使用<code>update-alternatives</code>命令来修改默认使用的<code>gcc</code>.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">sudo update-alternatives --install /usr/bin/gcc gcc &lt;需要使用的gcc的路径&gt; &lt;足够大的数值&gt;<br></code></pre></td></tr></table></figure>
+<p>这个足够大的数值只要确保比之前指定过的数值大就可以,从来没有指定过就设置为<code>1</code>也行.</p>
+<h2 id="快捷方式"><a class="markdownIt-Anchor" href="#快捷方式"></a> 快捷方式</h2>
+<h3 id="制作快捷方式"><a class="markdownIt-Anchor" href="#制作快捷方式"></a> 制作快捷方式</h3>
+<p>当我们有一个可执行文件,希望能够在开始菜单直接打开他.</p>
+<p>首先可以编写一个文件<code>&lt;文件名&gt;.desktop</code>,来制作快捷方式.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs shell">[Desktop Entry]<br>Exec=&lt;可执行文件地址&gt;<br>Name=&lt;快捷方式显示的名称&gt;<br>Icon=&lt;网上找的图标.svg&gt;<br>Type=Application<br></code></pre></td></tr></table></figure>
+<p>以上都是绝对路径,比如</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs shell">[Desktop Entry]<br>Name=Uengine<br>Exec=/home/zzidun/app/uengine/uengine.sh<br>Icon=/home/zzidun/app/uengine/anbox.svg<br>Type=Application<br></code></pre></td></tr></table></figure>
+<h3 id="快捷方式移动到开始菜单"><a class="markdownIt-Anchor" href="#快捷方式移动到开始菜单"></a> 快捷方式移动到开始菜单</h3>
+<p>复制到<code>/usr/share/applications</code>目录即可.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">sudo cp &lt;xxx.desktop&gt; /usr/share/application/<br></code></pre></td></tr></table></figure>
+<h2 id="应用商店安装到75报错"><a class="markdownIt-Anchor" href="#应用商店安装到75报错"></a> 应用商店安装到75%报错</h2>
+<p>一般是由于卸载软件没有完成导致的,用以下命令可以解决:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">sudo apt-get --fix-broken install -y<br></code></pre></td></tr></table></figure>
+<h2 id="apt-install-xxx-"><a class="markdownIt-Anchor" href="#apt-install-xxx-"></a> apt install XXX-</h2>
+<p>千万谨慎,不要在安装命令后面多写一个横杆<code>-</code>,这代表卸载.</p>
+<p>某一次我想要看看软件源提供了哪些版本的<code>gcc</code>,于是输入了<code>sudo apt install gcc-</code>,然后按<code>tab</code>查看列出的软件包.</p>
+<p>这时候列出的软件包列表是用回车翻页的,我一直按回车,没想到多按了几个.</p>
+<p>然后就变成执行了<code>sudo apt install gcc-</code>,一堆软件被卸载了,我人也裂开了.</p>
+<h2 id="休眠设置"><a class="markdownIt-Anchor" href="#休眠设置"></a> 休眠设置</h2>
+<p>看这个<a target="_blank" rel="noopener" href="https://xie.infoq.cn/article/af26942709c82ab1c7cd47f87">文章</a></p>
+<p>和这个<a target="_blank" rel="noopener" href="https://blog.csdn.net/defrag257/article/details/103997722">文章</a></p>
+<h2 id="常用软件安装"><a class="markdownIt-Anchor" href="#常用软件安装"></a> 常用软件安装</h2>
+<h3 id="git设置"><a class="markdownIt-Anchor" href="#git设置"></a> git设置</h3>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs shell">git config --global user.email &quot;&lt;邮箱&gt;&quot;<br>git config --global user.name &quot;&lt;用户名&gt;&quot;<br>git config --global http.postBuffer 10000M<br></code></pre></td></tr></table></figure>
+<h3 id="go"><a class="markdownIt-Anchor" href="#go"></a> go</h3>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs shell">wget https://dl.google.com/go/go1.13.linux-amd64.tar.gz<br><br>sudo tar -C /usr/local -xzf go1.13.linux-amd64.tar.gz<br></code></pre></td></tr></table></figure>
+<p>然后修改文件<code>~/.bashrc</code></p>
+<p>加上这一句</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">export PATH=$PATH:/usr/local/go/bin<br></code></pre></td></tr></table></figure>
+<p>然后</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">source ~/.bashrc<br></code></pre></td></tr></table></figure>
+<p>检查是否安装完成</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">go version<br></code></pre></td></tr></table></figure>
+<h3 id="npm"><a class="markdownIt-Anchor" href="#npm"></a> npm</h3>
+<a href="/917b256a/" title="自行安装nodejs和npm,解决apt源版本不兼容问题">自行安装nodejs和npm,解决apt源版本不兼容问题</a>
+<h3 id="mariadb"><a class="markdownIt-Anchor" href="#mariadb"></a> mariaDB</h3>
+<a href="/a738e98a/" title="安装和配置mariaDB">安装和配置mariaDB</a>
+<h3 id="firefox"><a class="markdownIt-Anchor" href="#firefox"></a> firefox</h3>
+<p>缩小顶边栏</p>
+<figure class="highlight clean"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs clean">顶部右键 -&gt; Customisze Firefox -&gt; 屏幕靠下TitleBar取消打勾<br></code></pre></td></tr></table></figure>
+<p>使用内存作为缓存</p>
+<p>火狐地址栏输入<code>about:config</code>,进入配置页面.</p>
+<p>搜索栏输入<code>browser.cache.disk.enable</code>设置为<code>false</code>.</p>
+<p>搜索栏输入<code>browser.cache.memory.enable</code>设置为<code>true</code>.</p>
+<p>搜索栏输入<code>browser.cache.memory.capacity</code>设置为<code>-1</code>.</p>
+<p>触屏</p>
+<p>修改<code>/etc/security/pam_env.conf</code>,在最后增加一行<code>MOZ_USE_XINPUT2 DEFAULT=1</code><br />
+在Firefox中，地址栏输入<code>about:config</code>，修改<code>dom.w3c_touch_events.enabled</code>为<code>1</code>。最后重启电脑。</p>
+<h3 id="platformio"><a class="markdownIt-Anchor" href="#platformio"></a> platformIO</h3>
+<p>直接<code>vscode</code>安装对应插件.</p>
+<p>重新启动<code>vscode</code>.</p>
+<p>默认情况下,platformIO会把新建的项目放到C盘用户文件里面某个很深的路径.</p>
+<p>修改新建项目时保存路径(在pio的终端输入)</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">pio settings set projects_dir &lt;路径&gt;<br></code></pre></td></tr></table></figure>
+<h3 id="minicom和fastboot找不到设备"><a class="markdownIt-Anchor" href="#minicom和fastboot找不到设备"></a> minicom和fastboot找不到设备</h3>
+<p>他们需要<code>sudo</code>.</p>
+<h3 id="anbox"><a class="markdownIt-Anchor" href="#anbox"></a> anbox</h3>
+<p>官方的教程中,找不到<code>binder</code>是正常的,<code>ubuntu20</code>之后都找不到的.</p>
+<p>接着下一步就好.</p>
+<p><code>anbox.appmgr</code>启动不了,显示以下错误,是需要设置环境变量.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs shell">[ 2022-01-06 05:29:58] [launch.cpp:168@operator()] Session manager is not yet running, trying to start it<br>[ 2022-01-06 05:29:58] [launch.cpp:117@launch_session_manager] Started session manager, will now try to connect ..<br>[ 2022-01-06 05:29:59] [splash_screen.cpp:55@SplashScreen] Window has no associated renderer yet, creating one ...<br>[ 2022-01-06 05:30:04] [daemon.cpp:61@Run] [org.freedesktop.DBus.Error.ServiceUnknown] The name org.anbox was not provided by any .service files<br></code></pre></td></tr></table></figure>
+<p>只需要在<code>~/.bashrc</code>文件末尾加上这个:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">export EGL_PLATFORM=x11<br></code></pre></td></tr></table></figure>
+<p>重新打开终端,输入<code>anbox.appmgr</code>就可以打开了.</p>
+<h3 id="steam"><a class="markdownIt-Anchor" href="#steam"></a> steam</h3>
+<p>需要安装以下软件</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">sudo apt install libgl1-mesa-dri:i386 libgl1:i386<br></code></pre></td></tr></table></figure>
+<p><code>~/.profile</code>末尾加上变量</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">PROTON_USE_WINED3D=1<br></code></pre></td></tr></table></figure>
+<h3 id="kvm"><a class="markdownIt-Anchor" href="#kvm"></a> kvm</h3>
+<p>以下方法转载自<a target="_blank" rel="noopener" href="https://linux.cn/article-11151-1.html">这个博客</a></p>
+<p>打开<code>/etc/libvirt/libvirtd.conf</code>进行编辑：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">sudo vi /etc/libvirt/libvirtd.conf<br></code></pre></td></tr></table></figure>
+<p>将<code>UNIX</code>域套接字组所有者设置为<code>libvirt</code>：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">unix_sock_group = &quot;libvirt&quot;<br></code></pre></td></tr></table></figure>
+<p>调整<code>UNIX</code>域套接字的读写权限：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">unix_sock_rw_perms = &quot;0770&quot;<br></code></pre></td></tr></table></figure>
+<p>步骤 3：启动并启用<code>libvirtd</code>服务</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell">sudo systemctl start libvirtd<br>sudo systemctl enable libvirtd<br></code></pre></td></tr></table></figure>
+<p>添加用户到<code>libvirt</code>组</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">sudo usermod -a -G libvirt $(whoami)<br></code></pre></td></tr></table></figure>
+<h3 id="qbittorent增强版"><a class="markdownIt-Anchor" href="#qbittorent增强版"></a> qbittorent增强版</h3>
+<p>可以防止迅雷吸血.</p>
+<p>迅雷得到网上其他bt软件的用户分享的资源,却不给别人分享.</p>
+<p>这样自私自利的软件需要我们一起抵制.</p>
+<p>下面命令安装的版本,可以禁止向迅雷,qq等吸血软件分享.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs cpp">sudo add-apt-repository ppa:poplite/qbittorrent-enhanced<br>sudo apt-get update<br>sudo apt install qbittorrent-enhanced<br></code></pre></td></tr></table></figure>
+<p><code>工具-&gt;首选项-&gt;高级-&gt;上传连接策略-&gt;反吸血</code></p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E8%BD%AF%E4%BB%B6%E5%AE%89%E8%A3%85%E5%92%8C%E9%85%8D%E7%BD%AE/" class="category-chain-item">软件安装和配置</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/linux/">#linux</a>
+      
+        <a href="/tags/anbox/">#anbox</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>linux桌面使用中的那些事</div>
+      <div>https://zzidun.tech/17eed1d/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>zzidun pavo</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2021年12月28日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>zzidun-blog</span></a> <a>powerby</a> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

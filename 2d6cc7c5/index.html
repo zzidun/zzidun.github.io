@@ -1,0 +1,821 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/logo.png">
+  <link rel="icon" href="/img/logo.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="zzidun pavo">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="栈 在编译期间,编译器会计算出一个函数中的所有局部变量需要使用多少的内存.这段内存称为函数的栈. 在执行一个函数的时候,会在两个寄存器中分别存有两个指针.   栈底指针,指向这段内存的起始位置.在riscv指令集,这个指针通常存在寄存器s0中.   栈顶指针,指向这段内存的结束位置.在riscv指令集,这个指针通常存在寄存器sp中.   这个栈是从高地址往低地址数的,也就是说栈顶指针的值其实比">
+<meta property="og:type" content="article">
+<meta property="og:title" content="变长数组在栈上的内存分布">
+<meta property="og:url" content="https://zzidun.tech/2d6cc7c5/index.html">
+<meta property="og:site_name" content="zzidun blog">
+<meta property="og:description" content="栈 在编译期间,编译器会计算出一个函数中的所有局部变量需要使用多少的内存.这段内存称为函数的栈. 在执行一个函数的时候,会在两个寄存器中分别存有两个指针.   栈底指针,指向这段内存的起始位置.在riscv指令集,这个指针通常存在寄存器s0中.   栈顶指针,指向这段内存的结束位置.在riscv指令集,这个指针通常存在寄存器sp中.   这个栈是从高地址往低地址数的,也就是说栈顶指针的值其实比">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-08-06T15:00:45.000Z">
+<meta property="article:modified_time" content="2023-01-22T03:04:00.321Z">
+<meta property="article:author" content="zzidun pavo">
+<meta property="article:tag" content="riscv">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>变长数组在栈上的内存分布 | zzidun blog</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"zzidun.tech","root":"/","version":"1.9.4","typing":{"enable":false,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/atom.xml" title="zzidun blog" type="application/atom+xml">
+</head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>zzidun&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/4.webp') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle">变长数组在栈上的内存分布</span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-08-06 15:00" pubdate>
+          2022年8月6日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          5.1k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          43 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">变长数组在栈上的内存分布</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <span id="more"></span>
+<h2 id="栈"><a class="markdownIt-Anchor" href="#栈"></a> 栈</h2>
+<p>在编译期间,编译器会计算出一个函数中的所有局部变量需要使用多少的内存.这段内存称为函数的栈.</p>
+<p>在执行一个函数的时候,会在两个寄存器中分别存有两个指针.</p>
+<ol>
+<li>
+<p>栈底指针,指向这段内存的起始位置.在riscv指令集,这个指针通常存在寄存器<code>s0</code>中.</p>
+</li>
+<li>
+<p>栈顶指针,指向这段内存的结束位置.在riscv指令集,这个指针通常存在寄存器<code>sp</code>中.</p>
+</li>
+</ol>
+<p>这个栈是从高地址往低地址数的,也就是说栈顶指针的值其实比栈底指针小.他们的关系是</p>
+<blockquote>
+<p>栈底指针 - 栈大小 = 栈顶指针</p>
+</blockquote>
+<p>假如有函数<code>fun1()</code>调用了<code>fun2()</code>.</p>
+<p>那么当执行到<code>fun2()</code>的时候,<code>fun2()</code>的栈底指针等于<code>fun1()</code>的栈顶指针.</p>
+<p>也就是有这样的关系(假设<code>fun1</code>的栈底指针是<code>x</code>):</p>
+<table>
+<thead>
+<tr>
+<th>地址</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>x</code></td>
+<td><code>fun1</code>的栈底指针</td>
+</tr>
+<tr>
+<td><code>x-fun1的栈大小</code></td>
+<td><code>fun1</code>的栈顶指针</td>
+</tr>
+<tr>
+<td><code>x-fun1的栈大小</code></td>
+<td><code>fun2</code>的栈底指针</td>
+</tr>
+<tr>
+<td><code>x-(fun1的栈大小+fun2的栈大小)</code></td>
+<td><code>fun2</code>的栈顶指针</td>
+</tr>
+</tbody>
+</table>
+<h2 id="疑惑"><a class="markdownIt-Anchor" href="#疑惑"></a> 疑惑</h2>
+<h3 id="变长数组存储在哪"><a class="markdownIt-Anchor" href="#变长数组存储在哪"></a> 变长数组存储在哪</h3>
+<p>我在刚学习编译原理的时候,错误地认为每个栈的大小都是在编译期就已经计算好固定了的.</p>
+<p>所以我一直对C99的变长数组感到疑惑.</p>
+<p>如果栈的大小是编译期确定的,也就是变长数组不能存储在栈上,那么它在哪?</p>
+<p>如果变长数组位于栈上,那么它在栈上是怎么分布的,如何被计算出来?难道是在运行期间才能确定栈的大小吗?</p>
+<h3 id="为什么编译器翻译出来的汇编常常使用栈底指针来表示变量的地址"><a class="markdownIt-Anchor" href="#为什么编译器翻译出来的汇编常常使用栈底指针来表示变量的地址"></a> 为什么编译器翻译出来的汇编常常使用栈底指针来表示变量的地址</h3>
+<p>如果我们阅读汇编代码,会发现编译器翻译出来的汇编代码常常使用<code>栈底指针+偏移</code>的方式来指出栈上变量的位置.</p>
+<p>只有在刚进入函数的时候,会用<code>栈顶指针+偏移</code>的方式保存上一个函数的信息到当前栈上.</p>
+<p>我曾经非常困惑,如果统一使用<code>栈顶指针+偏移</code>不是更加便于理解吗?</p>
+<h2 id="结论"><a class="markdownIt-Anchor" href="#结论"></a> 结论</h2>
+<p>通过对变长数组的汇编代码的阅读, 我发现:</p>
+<ol>
+<li>变长数组确实在栈上.</li>
+<li>栈的大小会在运行期改变.这个时候会修改栈顶指针.</li>
+<li>编译器在翻译的时候会先计算栈的大小<code>x</code>(这个大小不包含变长数组).最初进入函数时,会先分配一个大小为<code>x</code>的栈.</li>
+<li>刚进入函数时,<code>栈顶指针 = 栈底指针 - x</code></li>
+<li>分配了这个大小为<code>x</code>的栈之后,会计算变长数组的大小<code>y</code>.然后直接以新的栈顶指针为变长数组的起始位置,向后再扩张<code>y</code>字节的内存.</li>
+<li>最终,<code>栈顶指针 = 栈底指针 - (x + y)</code></li>
+<li>栈底指针在这个过程中保持不变,因此我们可以一直用栈底指针来找到栈上变量.</li>
+</ol>
+<p>也就是:</p>
+<table>
+<thead>
+<tr>
+<th>地址区间</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>[栈底指针-x, 栈底指针)</code></td>
+<td>函数中所有的局部变量(不包含变长数组)</td>
+</tr>
+<tr>
+<td><code>[栈底指针-(x+y), 栈底指针-x)</code></td>
+<td>函数中的局部变长数组(此时的地址区间<code>[栈顶指针,栈顶指针+元素大小)</code>是第0个元素的位置)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="汇编句读"><a class="markdownIt-Anchor" href="#汇编句读"></a> 汇编句读</h2>
+<h3 id="c语言"><a class="markdownIt-Anchor" href="#c语言"></a> C语言</h3>
+<p>一开始我们写下这样的C程序</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs C"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><br><span class="hljs-type">int</span> <span class="hljs-title function_">fun</span><span class="hljs-params">(<span class="hljs-type">int</span> x)</span><br>&#123;<br>    <span class="hljs-type">int</span> a[x];<br>    a[x<span class="hljs-number">-1</span>] = <span class="hljs-number">1</span>;<br>    <span class="hljs-keyword">return</span> a[x<span class="hljs-number">-1</span>];<br>&#125;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span><br>&#123;<br>    <span class="hljs-type">int</span> x;<br>    <span class="hljs-built_in">scanf</span>(<span class="hljs-string">&quot;%d&quot;</span>, &amp;x);<br>    fun(x);<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="汇编"><a class="markdownIt-Anchor" href="#汇编"></a> 汇编</h3>
+<p>如果使用命令<code>riscv64-linux-gnu-gcc a.c -S -O0</code>生成<code>a.s</code>文件,会发现这个文件里有一些让人难以理解的无用计算(计算的结果直接被覆盖,没有用于任何用途).</p>
+<p>例如这一段,大概可以猜测这里做了一个<code>128</code>位的乘法,但是计算出来的结果直接被覆盖.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs asm"># 如果元素大小位2的k次方字节,那么这些数字将会是61-k, 3+k, k<br>srli	a0,t1,59	# a0 = t1 &gt;&gt; 59		取t1(也就是数组长度x)的最高5位,保存到a5的最低5位上<br>slli	a3,t2,5		# a3 = t2 &lt;&lt; 5		取t2(也就是0)的最低59位,保存到a3的最高59位上<br>or	a3,a0,a3		# a3 = a3 | a0		将上面a5(最低5位有值)和a3(最高59位有值)组合起来,形成一个64位数字<br>slli	a2,t1,5		# a2 = t1 &lt;&lt; 5		取t1(也就是数组长度x)的最低59位,保存到a2的最高59位上<br>mv	a3,a1			# a3 = a1			a3被数组长度x覆盖?<br>mv	a6,a3			# a6 = a3<br>li	a7,0			# a7 = 0<br>srli	a3,a6,59	# a3 = a6 &gt;&gt; 59		取a6(也就是数组长度x)的最高5位,保存到a3的最低5位上<br>slli	a5,a7,5		# a5 = a7 &lt;&lt; 5		取a7(也就是0)的最低59位,保存到a5的最高59位上<br>or	a5,a3,a5		# a5 = a3 | a5		将上面a3(最低5位有值)和a5(最高59位有值)组合起来,形成一个64位数字<br>slli	a4,a6,5		# a4 = a6 &lt;&lt; 5		取a6(也就是数组长度x)的最低59位,保存到a4的最高59位上<br>mv	a5,a1			# a5 = a1			a5被数组长度x覆盖?<br></code></pre></td></tr></table></figure>
+<p>如果使用命令<code>riscv64-linux-gnu-gcc a.c -S -Og</code>生成<code>a.s</code>文件,产生的汇编就会精简这些意义不明的运算,同时又不会过于精简.</p>
+<p>所以下面我们使用加上<code>-Og</code>选项的汇编来讲解.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br></pre></td><td class="code"><pre><code class="hljs asm"># 文件的信息:<br>	.file	&quot;a.c&quot;<br>	.option pic<br># fun1的描述信息:<br>	.text<br>	.align	1<br>	.globl	fun<br>	.type	fun, @function<br># fun1的汇编:<br>fun:<br>	addi	sp,sp,-32<br>	sd	ra,24(sp)<br>	sd	s0,16(sp)<br>	addi	s0,sp,32<br>	la	a4,__stack_chk_guard<br>	ld	a5, 0(a4)<br>	sd	a5, -24(s0)<br>	li	a5, 0<br>	slli	a5,a0,2<br>	addi	a5,a5,15<br>	andi	a5,a5,-16<br>	sub	sp,sp,a5<br>	addiw	a0,a0,-1<br>	slli	a0,a0,2<br>	add	a0,sp,a0<br>	li	a5,1<br>	sd	a5,0(a0)<br>	ld	a3, -24(s0)<br>	ld	a5, 0(a4)<br>	xor	a5, a3, a5<br>	li	a3, 0<br>	bne	a5,zero,.L4<br>	li	a0,1<br>	addi	sp,s0,-32<br>	ld	ra,24(sp)<br>	ld	s0,16(sp)<br>	addi	sp,sp,32<br>	jr	ra<br>.L4:<br>	call	__stack_chk_fail@plt<br># fun1的描述信息:<br>	.size	fun, .-fun<br>	.section	.rodata.str1.8,&quot;aMS&quot;,@progbits,1<br>	.align	3<br># 字符串&quot;%d&quot;的信息:<br>.LC0:<br>	.string	&quot;%d&quot;<br># main的描述信息:<br>	.text<br>	.align	1<br>	.globl	main<br>	.type	main, @function<br>main:<br>	addi	sp,sp,-32<br>	sd	ra,24(sp)<br>	sd	s0,16(sp)<br>	la	s0,__stack_chk_guard<br>	ld	a5, 0(s0)<br>	sd	a5, 8(sp)<br>	li	a5, 0<br>	addi	a1,sp,4<br>	lla	a0,.LC0<br>	call	__isoc99_scanf@plt<br>	lw	a0,4(sp)<br>	call	fun<br>	ld	a4, 8(sp)<br>	ld	a5, 0(s0)<br>	xor	a5, a4, a5<br>	li	a4, 0<br>	bne	a5,zero,.L8<br>	li	a0,0<br>	ld	ra,24(sp)<br>	ld	s0,16(sp)<br>	addi	sp,sp,32<br>	jr	ra<br>.L8:<br>	call	__stack_chk_fail@plt<br># main的描述信息:<br>	.size	main, .-main<br>	.ident	&quot;GCC: (Ubuntu 11.2.0-16ubuntu1) 11.2.0&quot;<br>	.section	.note.GNU-stack,&quot;&quot;,@progbits<br><br></code></pre></td></tr></table></figure>
+<p>我们摘出<code>fun1()</code>的内容来看:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><code class="hljs asm">fun:<br>	addi	sp,sp,-32<br>	sd	ra,24(sp)<br>	sd	s0,16(sp)<br>	addi	s0,sp,32<br>	la	a4,__stack_chk_guard<br>	ld	a5, 0(a4)<br>	sd	a5, -24(s0)<br>	li	a5, 0<br>	slli	a5,a0,2<br>	addi	a5,a5,15<br>	andi	a5,a5,-16<br>	sub	sp,sp,a5<br>	addiw	a0,a0,-1<br>	slli	a0,a0,2<br>	add	a0,sp,a0<br>	li	a5,1<br>	sw	a5,0(a0)<br>	ld	a3, -24(s0)<br>	ld	a5, 0(a4)<br>	xor	a5, a3, a5<br>	li	a3, 0<br>	bne	a5,zero,.L4<br>	li	a0,1<br>	addi	sp,s0,-32<br>	ld	ra,24(sp)<br>	ld	s0,16(sp)<br>	addi	sp,sp,32<br>	jr	ra<br>.L4:<br>	call	__stack_chk_fail@plt<br></code></pre></td></tr></table></figure>
+<h4 id="第一次分配栈内存"><a class="markdownIt-Anchor" href="#第一次分配栈内存"></a> 第一次分配栈内存</h4>
+<p>首先,一进入函数就执行以下指令为栈分配了<code>32</code>字节的空间.并且保存了上一级函数的信息</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">addi</span>	sp,sp,-<span class="hljs-number">32</span>   # sp = sp - <span class="hljs-number">32</span>  栈顶向下扩展<span class="hljs-number">32</span>字节, <span class="hljs-number">32</span>字节是一个预计的大小,<br><span class="hljs-attribute">sd</span>	ra,<span class="hljs-number">24</span>(sp)       # *(sp+<span class="hljs-number">24</span>) = ra	保存返回地址到[sp+<span class="hljs-number">24</span>, sp+<span class="hljs-number">32</span>), 也就是将来的[s0-<span class="hljs-number">8</span>, s0)<br><span class="hljs-attribute">sd</span>	s0,<span class="hljs-number">16</span>(sp)       # *(sp+<span class="hljs-number">16</span>) = s0 保存上一级函数的栈底指针到[sp+<span class="hljs-number">16</span>, sp+<span class="hljs-number">24</span>), 也就是将来的[s0-<span class="hljs-number">16</span>, s0-<span class="hljs-number">8</span>)<br><span class="hljs-attribute">addi</span>	s0,sp,<span class="hljs-number">32</span>    # s0 = sp + <span class="hljs-number">32</span>  计算出当前函数的栈底<br></code></pre></td></tr></table></figure>
+<p>目前栈上的内存如下:</p>
+<table>
+<thead>
+<tr>
+<th>位置</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>[s0-8,s0)</code></td>
+<td>返回地址</td>
+</tr>
+<tr>
+<td><code>[s0-16, s0-8)</code></td>
+<td>上一级函数的栈底指针</td>
+</tr>
+<tr>
+<td><code>[sp, s0-16)</code></td>
+<td>未使用</td>
+</tr>
+</tbody>
+</table>
+<h4 id="设置栈溢出标记"><a class="markdownIt-Anchor" href="#设置栈溢出标记"></a> 设置栈溢出标记</h4>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs asm">la	a4,__stack_chk_guard    # 取出栈溢出标记的地址,放到寄存器a4<br>ld	a5, 0(a4)               # 取出存放在a4中的地址所指向的8个字节内容,存到a5<br>sd	a5, -24(s0)             # 将a5中的标记保存到[s0-24,s0-16),<br></code></pre></td></tr></table></figure>
+<p>详情见另一篇文章<a href="/97bef05c/" title="stack_chk_guard避免栈溢出攻击">stack_chk_guard避免栈溢出攻击</a></p>
+<p>目前栈上的内容如下:</p>
+<table>
+<thead>
+<tr>
+<th>位置</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>[s0-8,s0)</code></td>
+<td>返回地址</td>
+</tr>
+<tr>
+<td><code>[s0-16, s0-8)</code></td>
+<td>上一级函数的栈底指针</td>
+</tr>
+<tr>
+<td><code>[s0-24, s0-16)</code></td>
+<td>栈溢出标记</td>
+</tr>
+<tr>
+<td><code>[sp, s0-24)</code></td>
+<td>未使用</td>
+</tr>
+</tbody>
+</table>
+<h4 id="计算变长数组大小"><a class="markdownIt-Anchor" href="#计算变长数组大小"></a> 计算变长数组大小</h4>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs asm">li	a5, 0           # a5 = 0<br>slli	a5,a0,2     # a5 = a0 &lt;&lt; 2(相当于a5=a0*4) 计算出数组大小,每个元素4字节<br>addi	a5,a5,15    # a5 = a5 + 15<br>andi	a5,a5,-16   # a5 = a5 &amp; (-16) 这两步是一个位运算的技巧,作用是将a5变为16的倍数(向上取整)<br></code></pre></td></tr></table></figure>
+<p>这里的寄存器<code>a0</code>保存了参数<code>x</code>,这是riscv函数调用的习惯.</p>
+<p>计算出数组的大小按照<code>16</code>字节对齐.</p>
+<h4 id="第二次分配栈内存"><a class="markdownIt-Anchor" href="#第二次分配栈内存"></a> 第二次分配栈内存</h4>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs asm">sub	sp,sp,a5    # sp = sp - a5 <br></code></pre></td></tr></table></figure>
+<p>栈顶指针再向下扩张<code>a5</code>个字节的大小.</p>
+<p>目前栈上的内容如下:</p>
+<table>
+<thead>
+<tr>
+<th>位置</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>[s0-8,s0)</code></td>
+<td>返回地址</td>
+</tr>
+<tr>
+<td><code>[s0-16, s0-8)</code></td>
+<td>上一级函数的栈底指针</td>
+</tr>
+<tr>
+<td><code>[s0-24, s0-16)</code></td>
+<td>栈溢出标记</td>
+</tr>
+<tr>
+<td><code>[sp+数组大小, s0-24)</code></td>
+<td>未使用</td>
+</tr>
+<tr>
+<td><code>[sp, sp+数组大小)</code></td>
+<td>变长数组</td>
+</tr>
+</tbody>
+</table>
+<h4 id="操作变长数组"><a class="markdownIt-Anchor" href="#操作变长数组"></a> 操作变长数组</h4>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs asm">addiw	a0,a0,-1    # a0 = a0 - 1 32位加法,计算x-1<br>slli	a0,a0,2     # a0 = a0 &lt;&lt; 2(相当于a5=a0*4) 计算出第x-1个元素相对于数组起点的偏移<br>add	a0,sp,a0        # a0 = sp + a0 计算出第x-1个元素的地址,也就是[sp+a0,sp+a0+元素大小)<br>li	a5,1            # a5 = 1<br>sd	a5,0(a0)        # *(a0) = a5    给第x-1个元素赋值<br></code></pre></td></tr></table></figure>
+<h4 id="检查栈溢出标记"><a class="markdownIt-Anchor" href="#检查栈溢出标记"></a> 检查栈溢出标记</h4>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs asm">ld	a3, -24(s0)     # 取出之前的标记<br>ld	a5, 0(a4)       # 获取一个新的标记<br>xor	a5, a3, a5      # 将原本的标记和新的标记对比,从而检查就标记是否被修改<br>li	a3, 0           <br>bne	a5,zero,.L4     # 如果被修改,那么跳转到.L4<br></code></pre></td></tr></table></figure>
+<p>可以认为地址<code>__stack_chk_fail@plt</code>存有一个处理检查异常的函数.</p>
+<p>一旦检查不通过就会调用他来处理.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs asm">.L4:<br>	call	__stack_chk_fail@plt<br></code></pre></td></tr></table></figure>
+<h4 id="返回"><a class="markdownIt-Anchor" href="#返回"></a> 返回</h4>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs asm">li	a0,1            # a0 = 1<br>addi	sp,s0,-32   # sp = s0 - 32 恢复第一次分配栈内存时的sp<br>ld	ra,24(sp)       # 取出之前保存的返回地址<br>ld	s0,16(sp)       # 取出之前保存的上一级函数的栈底地址<br>addi	sp,sp,32    # 恢复sp指针到进入函数之前<br>jr	ra              # 跳转到回上一级函数<br></code></pre></td></tr></table></figure>
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/C%E8%AF%AD%E8%A8%80%E4%B8%8Eriscv%E6%B1%87%E7%BC%96%E9%98%85%E8%AF%BB/" class="category-chain-item">C语言与riscv汇编阅读</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/riscv/">#riscv</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>变长数组在栈上的内存分布</div>
+      <div>https://zzidun.tech/2d6cc7c5/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>zzidun pavo</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年8月6日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>zzidun-blog</span></a> <a>powerby</a> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

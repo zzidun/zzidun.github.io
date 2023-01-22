@@ -1,0 +1,1360 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/logo.png">
+  <link rel="icon" href="/img/logo.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="zzidun pavo">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="各种网线的特点; 各种mii接口的特点;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="物理层的那些东西">
+<meta property="og:url" content="https://zzidun.tech/f8be8220/index.html">
+<meta property="og:site_name" content="zzidun blog">
+<meta property="og:description" content="各种网线的特点; 各种mii接口的特点;">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://zzidun.tech/img/20220301195000.jpg">
+<meta property="article:published_time" content="2022-03-01T16:37:13.000Z">
+<meta property="article:modified_time" content="2023-01-22T03:04:00.321Z">
+<meta property="article:author" content="zzidun pavo">
+<meta property="article:tag" content="mii">
+<meta property="article:tag" content="rj45">
+<meta property="article:tag" content="phy">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://zzidun.tech/img/20220301195000.jpg">
+  
+  
+  
+  <title>物理层的那些东西 | zzidun blog</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"zzidun.tech","root":"/","version":"1.9.4","typing":{"enable":false,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/atom.xml" title="zzidun blog" type="application/atom+xml">
+</head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>zzidun&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/4.webp') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle">物理层的那些东西</span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-03-01 16:37" pubdate>
+          2022年3月1日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          5k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          42 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">物理层的那些东西</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <ul>
+<li>各种网线的特点;</li>
+<li>各种mii接口的特点;</li>
+</ul>
+<span id="more"></span>
+<p>他们的连接关系通常如下</p>
+<figure class="highlight clean"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs clean">双绞线-&gt;rj45接口-&gt;变压器-&gt;PHY-&gt;mii-&gt;MAC<br></code></pre></td></tr></table></figure>
+<p>就像我随便找的这张图</p>
+<p><img src="/img/20220301195000.jpg" srcset="/img/loading.gif" lazyload alt="" /></p>
+<h2 id="双绞线"><a class="markdownIt-Anchor" href="#双绞线"></a> 双绞线</h2>
+<h3 id="类型"><a class="markdownIt-Anchor" href="#类型"></a> 类型</h3>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>描述</th>
+<th>速率</th>
+<th>传输距离</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>一类线</td>
+<td>最早的电话线,只有两对线(一对收,一对发)</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>二类线</td>
+<td>可以用于语音和数据传输,有三对线</td>
+<td>4Mbps</td>
+<td></td>
+</tr>
+<tr>
+<td>三类线</td>
+<td>被ANSI/TIA-568.C.2作为最低使用等级</td>
+<td>10Mbps</td>
+<td>100M</td>
+</tr>
+<tr>
+<td>四类线</td>
+<td></td>
+<td>16Mbps</td>
+<td></td>
+</tr>
+<tr>
+<td>五类线</td>
+<td></td>
+<td>100Mbps</td>
+<td>100M</td>
+</tr>
+<tr>
+<td>超五类线(CAT5E)</td>
+<td>从这里开始可以支持千兆,基本上够用了</td>
+<td>1000Mbps</td>
+<td>100M</td>
+</tr>
+<tr>
+<td>六类线</td>
+<td>新增十字骨架.因为线芯粗,水晶头会把相隔的线错开.勉强可以用超五类水晶头.其实靠谱的六类线就可以在100米内跑到万兆了.</td>
+<td>1000Mbps</td>
+<td>100M</td>
+</tr>
+<tr>
+<td>超六类线(CAT6A)</td>
+<td>好像新增一根抗拉线</td>
+<td>1Gbps</td>
+<td>100M</td>
+</tr>
+<tr>
+<td>七类线</td>
+<td>线很粗,水晶头难打</td>
+<td>10Gbps</td>
+<td>100M</td>
+</tr>
+<tr>
+<td>超七类线(CAT7A)</td>
+<td>线很粗,水晶头难打</td>
+<td>10Gbps</td>
+<td>100M</td>
+</tr>
+<tr>
+<td>八类线</td>
+<td>目前没有一个确定的标准</td>
+<td>25G-40Gbps</td>
+<td>30M</td>
+</tr>
+</tbody>
+</table>
+<h3 id="接线"><a class="markdownIt-Anchor" href="#接线"></a> 接线</h3>
+<p>水晶头不带卡扣那一面朝向我们时,从左到右分别是</p>
+<table>
+<thead>
+<tr>
+<th>标准</th>
+<th>TX+</th>
+<th>TX-</th>
+<th>RX+</th>
+<th>未使用</th>
+<th>未使用</th>
+<th>RX-</th>
+<th>未使用</th>
+<th>未使用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>568A</td>
+<td>白绿</td>
+<td>绿</td>
+<td>白橙</td>
+<td>蓝</td>
+<td>白蓝</td>
+<td>橙</td>
+<td>白棕</td>
+<td>棕</td>
+</tr>
+<tr>
+<td>568B</td>
+<td>白橙</td>
+<td>橙</td>
+<td>白绿</td>
+<td>蓝</td>
+<td>白蓝</td>
+<td>绿</td>
+<td>白棕</td>
+<td>棕</td>
+</tr>
+</tbody>
+</table>
+<p>常用的是568B.</p>
+<p>有4条线未使用,在百兆网络可以只连接4条,但是poe供电和千兆以上网络必须全连接.</p>
+<p>可以注意到,rj45不需要时钟线.</p>
+<h2 id="phy"><a class="markdownIt-Anchor" href="#phy"></a> PHY</h2>
+<p>IEEE802.3标准定义了三个组成PHY的主要子层</p>
+<h3 id="8b10b编码和4b5b编码"><a class="markdownIt-Anchor" href="#8b10b编码和4b5b编码"></a> 8B/10B编码和4B/5B编码</h3>
+<p>简单来说,就是因为一些物理原因,需要用10位数据来表示8位数据,会更有效率.而且能够在接收的时候从这些数据中得到时钟,而不需要额外的时钟线.</p>
+<p>即使这么做会浪费20%的速率.</p>
+<p>以下描述来自百度百科</p>
+<blockquote>
+<p>8B/10B，也叫做8比特/10比特或8b10b。8b/10b方式最初由IBM公司于1983年发明并应用于ESCON(200M互连系统），由Al Widmer和Peter Franaszek在IBM的刊物“研究与开发”上描述。<br />
+8b/10b编码的特性之一是保证DC 平衡，采用8b/10b编码方式，可使得发送的“0”、“1”数量保持基本一致，连续的“1”或“0”不超过5位，即每5个连续的“1”或“0”后必须插入一位“0”或“1”，从而保证信号DC平衡，它就是说，在链路超时时不致发生DC失调。通过8b/10b编码，可以保证传输的数据串在接收端能够被正确复原，除此之外，利用一些特殊的代码( 在PCI-Express总线中为K码) ，可以帮助接收端进行还原的工作，并且可以在早期发现数据位的传输错误，抑制错误继续发生。<br />
+8b/10b编码是将一组连续的8位数据分解成两组数据，一组3位，一组5位，经过编码后分别成为一组4位的代码和一组6位的代码，从而组成一组10位的数据发送出去。相反，解码是将1组10位的输入数据经过变换得到8位数据位。数据值可以统一的表示为DX.Y或KX.Y，其中D表示为数据代码，K表示为特殊的命令代码，X表示输入的原始数据的低5位EDCBA，Y 表示输入的原始数据的高3位HGF。</p>
+</blockquote>
+<p>4B/5B编码的出现也是类似原因.</p>
+<h3 id="pcs"><a class="markdownIt-Anchor" href="#pcs"></a> PCS</h3>
+<p>物理编码子层(Physical Coding Sublayer)</p>
+<p>主要作用是对数据进行编码和解码,比如负责转换上面所说的8B/10B编码.</p>
+<p>因此,如果速率是100Mbps,那么这里实际通过的数据速率实际上是125Mbps.</p>
+<p>他通过mii接口与mac层交互</p>
+<h3 id="pma"><a class="markdownIt-Anchor" href="#pma"></a> PMA</h3>
+<p>物理介质连接子层(Physical Medium Attachment Layer)</p>
+<p>将串行信号装换成并行信号.提供给PCS,或者反过来把从PCS来的并行信号装换成串行信号,传给PMD.</p>
+<h3 id="pmd"><a class="markdownIt-Anchor" href="#pmd"></a> PMD</h3>
+<p>物理介质相关子层(Physical Medium Dependent Layer)</p>
+<p>将串行信号传输到相应的物理介质上.</p>
+<h2 id="mii接口"><a class="markdownIt-Anchor" href="#mii接口"></a> MII接口</h2>
+<p>MII是用于连接PHY和MAC的接口.</p>
+<h3 id="mdio"><a class="markdownIt-Anchor" href="#mdio"></a> MDIO</h3>
+<p>所有接口除了下文所说的线以外还带<code>MDIO</code>和<code>MDC</code>线.</p>
+<p>通过这两条线<code>MAC</code>层可以控制<code>PHY</code>层的寄存器,并通过这些寄存器对物理层芯片进行控制和管理.</p>
+<table>
+<thead>
+<tr>
+<th>线</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>MDC</code></td>
+<td>时钟,和<code>TX_CLK</code>,<code>RX_CLK</code>无关系</td>
+</tr>
+<tr>
+<td><code>MDIO</code></td>
+<td>双向的数据线,在上升沿有效</td>
+</tr>
+</tbody>
+</table>
+<p><code>MDIO</code>管理接口的数据帧结构如下</p>
+<table>
+<thead>
+<tr>
+<th>内容</th>
+<th>读</th>
+<th>写</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PRE</td>
+<td>32个连续的1</td>
+<td>32个连续的1</td>
+<td>前缀</td>
+</tr>
+<tr>
+<td>ST</td>
+<td><code>01</code></td>
+<td><code>01</code></td>
+<td></td>
+</tr>
+<tr>
+<td>OP</td>
+<td><code>10</code></td>
+<td><code>01</code></td>
+<td>操作码,用来表示读还是写</td>
+</tr>
+<tr>
+<td>PHYAD</td>
+<td>5位</td>
+<td>5位</td>
+<td>物理层芯片的地址,每个芯片都把自己的地址与这5个位进行比较.若匹配则响应后面的操作,否则忽略掉后面的操作.</td>
+</tr>
+<tr>
+<td>REGAD</td>
+<td>5位</td>
+<td>5位</td>
+<td>用来表示物理层芯片的32个寄存器中某个寄存器的地址</td>
+</tr>
+<tr>
+<td>TA</td>
+<td><code>Z0</code></td>
+<td><code>10</code></td>
+<td>状态转换域,读操作时,第一位为高阻态,第二位由<code>PHY</code>置零;写操作时,由<code>MAC</code>输出<code>10</code></td>
+</tr>
+<tr>
+<td>DATA</td>
+<td>16位</td>
+<td>16位</td>
+<td>数据域</td>
+</tr>
+<tr>
+<td>IDLE</td>
+<td>空闲</td>
+<td>空闲</td>
+<td>一半用上拉电阻使其出于高点平</td>
+</tr>
+</tbody>
+</table>
+<h3 id="速率对比"><a class="markdownIt-Anchor" href="#速率对比"></a> 速率对比</h3>
+<table>
+<thead>
+<tr>
+<th>接口</th>
+<th>速率</th>
+<th>时钟</th>
+<th>线</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MII</td>
+<td>10Mbps</td>
+<td>2.5Mhz</td>
+<td>16线</td>
+</tr>
+<tr>
+<td>MII</td>
+<td>100Mbps</td>
+<td>25Mhz</td>
+<td>16线</td>
+</tr>
+<tr>
+<td>RMII</td>
+<td>10Mbps</td>
+<td>50Mhz</td>
+<td>8线</td>
+</tr>
+<tr>
+<td>RMII</td>
+<td>100Mbps</td>
+<td>50Mhz</td>
+<td>8线</td>
+</tr>
+<tr>
+<td>SMII</td>
+<td>10Mbps</td>
+<td>125Mhz</td>
+<td>4线</td>
+</tr>
+<tr>
+<td>SMII</td>
+<td>100Mbps</td>
+<td>125Mhz</td>
+<td>4线</td>
+</tr>
+<tr>
+<td>GMII</td>
+<td>1000Mbps</td>
+<td>125Mhz</td>
+<td>24线</td>
+</tr>
+<tr>
+<td>RGMII</td>
+<td>10Mbps</td>
+<td>2.5Mhz</td>
+<td>16线</td>
+</tr>
+<tr>
+<td>RGMII</td>
+<td>100Mbps</td>
+<td>25Mhz</td>
+<td>16线</td>
+</tr>
+<tr>
+<td>RGMII</td>
+<td>1000Mbps</td>
+<td>125Mhz</td>
+<td>16线</td>
+</tr>
+<tr>
+<td>SGMII</td>
+<td>1000Mbps</td>
+<td>625Mhz</td>
+<td>至少2线</td>
+</tr>
+</tbody>
+</table>
+<h3 id="mii所有变种的祖先"><a class="markdownIt-Anchor" href="#mii所有变种的祖先"></a> MII,所有变种的祖先</h3>
+<p>mii接口一共有<code>16</code>条线.</p>
+<table>
+<thead>
+<tr>
+<th>线</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TXD[3:0]</code></td>
+<td>数据发送,共<code>4</code>条线</td>
+</tr>
+<tr>
+<td><code>TX_CLK</code></td>
+<td>接受数据参考时钟,在<code>100Mbps</code>下,时钟频率为<code>25Mhz</code>,<code>10Mbps</code>速率下,时钟频率为<code>2.5Mhz</code></td>
+</tr>
+<tr>
+<td><code>TX_EN</code></td>
+<td>发送使能信号,只有在<code>TX_EN</code>有效期内传的数据才有效</td>
+</tr>
+<tr>
+<td><code>TX_ER</code></td>
+<td>发送数据错误提示信号,同步于<code>TX_CLK</code>,高电平有效.有效期内传输的数据无效.在<code>10Mbps</code>速率下不起作用</td>
+</tr>
+<tr>
+<td><code>RXD[3:0]</code></td>
+<td>数据接收,共<code>4</code>条线</td>
+</tr>
+<tr>
+<td><code>RX_CLK</code></td>
+<td>接收数据参考时钟,在<code>100Mbps</code>下,时钟频率为<code>25Mhz</code>,<code>10Mbps</code>速率下,时钟频率为<code>2.5Mhz</code></td>
+</tr>
+<tr>
+<td><code>RX_DV</code></td>
+<td>接收使能信号,只有在<code>RX_DV</code>有效期内传的数据才有效</td>
+</tr>
+<tr>
+<td><code>RX_ER</code></td>
+<td>接收数据错误提示信号,同步于<code>TX_CLK</code>,高电平有效.有效期内传输的数据无效.在<code>10Mbps</code>速率下不起作用</td>
+</tr>
+<tr>
+<td><code>CRS</code></td>
+<td>载波侦测信号,不需要同步于参考时钟,只有<code>PHY</code>在半双工模式下有效</td>
+</tr>
+<tr>
+<td><code>COL</code></td>
+<td>冲突检测信号,不需要同步于参考时钟,只有<code>PHY</code>在半双工模式下有效</td>
+</tr>
+</tbody>
+</table>
+<p>注意,这里的<code>TX_CLK</code>也是由<code>PHY</code>提供的.即使数据由<code>MAC</code>发送.</p>
+<h3 id="rmii"><a class="markdownIt-Anchor" href="#rmii"></a> RMII</h3>
+<p>简化版的<code>MII</code>,减少到<code>8</code>根线.</p>
+<table>
+<thead>
+<tr>
+<th>线</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TXD[1:0]</code></td>
+<td>数据发送,只有两条</td>
+</tr>
+<tr>
+<td><code>TX_EN</code></td>
+<td>发送使能信号</td>
+</tr>
+<tr>
+<td><code>RXD[1:0]</code></td>
+<td>数据接收,只有两条</td>
+</tr>
+<tr>
+<td><code>RX_ER</code></td>
+<td>接收数据错误提示信号</td>
+</tr>
+<tr>
+<td><code>CLK_REF</code></td>
+<td>由外部时钟提供的<code>50Mhz</code>时钟</td>
+</tr>
+<tr>
+<td><code>CRS_DV</code></td>
+<td>同时发送<code>RX_DV</code>和<code>CRS</code>信号,<code>MAC</code>能够从中获得两个信号</td>
+</tr>
+</tbody>
+</table>
+<p>这里注意,因为时钟总是50Mhz,那么两条数据线总能传100Mbps才对,为什么会有10Mbps的选项呢?</p>
+<p>其实是在10Mbps速率时,<code>TX/RX</code>每隔10个周期采样一个数据,因而<code>TX/RX</code>数据需要在数据线上保留10个周期,相当于一个数据发送10次.</p>
+<h3 id="smii及其后代"><a class="markdownIt-Anchor" href="#smii及其后代"></a> SMII及其后代</h3>
+<p>串行MII,也就是数据线只有一条,并且只需要四条线.</p>
+<table>
+<thead>
+<tr>
+<th>线</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TXD</td>
+<td>发送数据</td>
+</tr>
+<tr>
+<td>RXD</td>
+<td>接收数据</td>
+</tr>
+<tr>
+<td>SYNC</td>
+<td>每10个时钟周期由<code>PHY</code>置为高点平,表示一组数据开始</td>
+</tr>
+<tr>
+<td>CLK_REF</td>
+<td>120Mhz,因为每8位数据中会插入2位控制信号,所以需要大于100Mhz</td>
+</tr>
+</tbody>
+</table>
+<p>在发送数据上增加的数据是<code>TX_EN</code>和<code>TX_ER</code>.</p>
+<p>在接收数据上增加的数据是<code>RX_DV</code>和<code>CRS</code>.</p>
+<p>使用和RMII同样的方法来实现10Mbps.</p>
+<h4 id="ssmii"><a class="markdownIt-Anchor" href="#ssmii"></a> SSMII</h4>
+<p>同步串行MII,收发使用独立的<code>SYNC</code>和<code>CLK</code>,因此比SMII多两条线.</p>
+<p>注意这个接口的<code>SYNC</code>和<code>CLK</code>都是由<code>PHY</code>提供的,无论方向如何.</p>
+<table>
+<thead>
+<tr>
+<th>线</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TXD</td>
+<td>发送数据</td>
+</tr>
+<tr>
+<td>TX_CLK</td>
+<td>发送时钟</td>
+</tr>
+<tr>
+<td>TX_SYNC</td>
+<td>发送同步时钟</td>
+</tr>
+<tr>
+<td>RXD</td>
+<td>接收数据</td>
+</tr>
+<tr>
+<td>RX_CLK</td>
+<td>接收时钟</td>
+</tr>
+<tr>
+<td>RX_SYNC</td>
+<td>接收同步时钟</td>
+</tr>
+</tbody>
+</table>
+<h4 id="sssmii"><a class="markdownIt-Anchor" href="#sssmii"></a> SSSMII</h4>
+<p>源同步串行MII,和上一个SSMII的区别在于,发送方的<code>SYNC</code>和<code>CLK</code>由<code>MAC</code>提供.</p>
+<table>
+<thead>
+<tr>
+<th>线</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TXD</td>
+<td>发送数据</td>
+</tr>
+<tr>
+<td>TX_CLK</td>
+<td>发送时钟</td>
+</tr>
+<tr>
+<td>TX_SYNC</td>
+<td>发送同步时钟</td>
+</tr>
+<tr>
+<td>RXD</td>
+<td>接收数据</td>
+</tr>
+<tr>
+<td>RX_CLK</td>
+<td>接收时钟</td>
+</tr>
+<tr>
+<td>RX_SYNC</td>
+<td>接收同步时钟</td>
+</tr>
+</tbody>
+</table>
+<h3 id="gmii及其后代"><a class="markdownIt-Anchor" href="#gmii及其后代"></a> GMII及其后代</h3>
+<p>时钟频率提升到125Mbps,数据线变为8根,因此它能够达到千兆速度.</p>
+<p>注意,这里的<code>TX_CLK</code>是由<code>MAC</code>提供的,这和MII不同.</p>
+<p>同时他也兼容MII,这时候只使用4条数据线,并且时钟方向改变.</p>
+<table>
+<thead>
+<tr>
+<th>线</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TXD[7:0]</code></td>
+<td>数据发送,共<code>4</code>条线</td>
+</tr>
+<tr>
+<td><code>TX_CLK</code></td>
+<td>接受数据参考时钟</td>
+</tr>
+<tr>
+<td><code>TX_EN</code></td>
+<td>发送使能信号,只有在<code>TX_EN</code>有效期内传的数据才有效</td>
+</tr>
+<tr>
+<td><code>TX_ER</code></td>
+<td>发送数据错误提示信号,同步于<code>TX_CLK</code>,高电平有效.有效期内传输的数据无效.</td>
+</tr>
+<tr>
+<td><code>RXD[7:0]</code></td>
+<td>数据接收,共<code>4</code>条线</td>
+</tr>
+<tr>
+<td><code>RX_CLK</code></td>
+<td>接收数据参考时钟</td>
+</tr>
+<tr>
+<td><code>RX_DV</code></td>
+<td>接收使能信号,只有在<code>RX_DV</code>有效期内传的数据才有效</td>
+</tr>
+<tr>
+<td><code>RX_ER</code></td>
+<td>接收数据错误提示信号,同步于<code>TX_CLK</code>,高电平有效.有效期内传输的数据无效.</td>
+</tr>
+<tr>
+<td><code>CRS</code></td>
+<td>载波侦测信号,不需要同步于参考时钟,只有<code>PHY</code>在半双工模式下有效</td>
+</tr>
+<tr>
+<td><code>COL</code></td>
+<td>冲突检测信号,不需要同步于参考时钟,只有<code>PHY</code>在半双工模式下有效</td>
+</tr>
+</tbody>
+</table>
+<h4 id="rgmii"><a class="markdownIt-Anchor" href="#rgmii"></a> RGMII</h4>
+<p>简化的GMII,只有14条线.</p>
+<table>
+<thead>
+<tr>
+<th>线</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TXD[3:0]</code></td>
+<td>数据发送,共<code>4</code>条线</td>
+</tr>
+<tr>
+<td><code>TX_CLK</code></td>
+<td>接受数据参考时钟</td>
+</tr>
+<tr>
+<td><code>TX_EN</code></td>
+<td>发送使能信号,只有在<code>TX_EN</code>有效期内传的数据才有效</td>
+</tr>
+<tr>
+<td><code>RXD[3:0]</code></td>
+<td>数据接收,共<code>4</code>条线</td>
+</tr>
+<tr>
+<td><code>RX_CLK</code></td>
+<td>接收数据参考时钟</td>
+</tr>
+<tr>
+<td><code>RX_DV</code></td>
+<td>接收使能信号,只有在<code>RX_DV</code>有效期内传的数据才有效</td>
+</tr>
+<tr>
+<td><code>CRS</code></td>
+<td>载波侦测信号,不需要同步于参考时钟,只有<code>PHY</code>在半双工模式下有效</td>
+</tr>
+<tr>
+<td><code>COL</code></td>
+<td>冲突检测信号,不需要同步于参考时钟,只有<code>PHY</code>在半双工模式下有效</td>
+</tr>
+</tbody>
+</table>
+<p>时钟频率依旧是125Mbps,数据线减少为4条.</p>
+<p>为了达到1000Mbps,它在上升沿下降沿都采样数据.</p>
+<p>上升沿发送的数据相当于原本的<code>TXD[3:0]</code>,下降沿发送的数据相当于原来的<code>TXD[7:4]</code>.接收同理.</p>
+<p>上升沿发送使能信息,下降沿发送错误信息,从而在一条线上发送使能和错误信息.</p>
+<p>如果降低时钟频率为25Mhz和2.5Mhz,也可以实现100Mbps和10Mbps.</p>
+<h4 id="sgmii"><a class="markdownIt-Anchor" href="#sgmii"></a> SGMII</h4>
+<p>串行的GMII,收发各一对差分信号线.时钟频率625Mhz,在上升沿和下降沿都采样.</p>
+<p>有<code>CLK</code>,但是有时候不使用,而是直接从数据中恢复出时钟.</p>
+<p>因为每8位数据都需要插入2位数据(使能和错误),因此传输速率实际需要达到1250Mbps=625Mhz*2(两次采样).</p>
+<p>这也就是为什么时钟频率是625Mbps.</p>
+<table>
+<thead>
+<tr>
+<th>线</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TXD</td>
+<td>发送</td>
+</tr>
+<tr>
+<td>TX_CLK</td>
+<td>发送时钟</td>
+</tr>
+<tr>
+<td>RXD</td>
+<td>接收</td>
+</tr>
+<tr>
+<td>RX_CLK</td>
+<td>接收时钟</td>
+</tr>
+</tbody>
+</table>
+<p>SGMII接口可以配置成SerDes接口,直接外接光模块.</p>
+<p>这时候虽然没有使能信号和错误信号.但625Mhz的频率还是只能传1000Mbps的数据.</p>
+<p>为什么这里会多用20%的频率呢?</p>
+<p>因为这时候没有了<code>PHY</code>,需要直接接收<code>8B/10B</code>信号,传给<code>MAC</code>处理.</p>
+<h4 id="qsgmii"><a class="markdownIt-Anchor" href="#qsgmii"></a> QSGMII</h4>
+<p>四个SGMII合在一起,实现一个5000Mbps的接口.</p>
+<h2 id="wlan-和-wifi"><a class="markdownIt-Anchor" href="#wlan-和-wifi"></a> wlan 和 wifi</h2>
+<p>wlan是无线局域网,802.11是wlan的一个标准,wifi是802.11的一个实现.</p>
+<h3 id="各代wifi的特点"><a class="markdownIt-Anchor" href="#各代wifi的特点"></a> 各代wifi的特点</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>标准</th>
+<th>年份</th>
+<th>工作频段</th>
+<th>理论速率</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td>802.11</td>
+<td>1997</td>
+<td>2.4GHZ</td>
+<td>2Mbps</td>
+</tr>
+<tr>
+<td></td>
+<td>802.11b</td>
+<td>1999</td>
+<td>2.4GHZ</td>
+<td>11Mbps</td>
+</tr>
+<tr>
+<td></td>
+<td>802.11a</td>
+<td>1999</td>
+<td>5GHZ</td>
+<td>54Mbps</td>
+</tr>
+<tr>
+<td></td>
+<td>802.11g</td>
+<td>1999</td>
+<td>2.4GHZ</td>
+<td>54Mbps</td>
+</tr>
+<tr>
+<td>WI-FI4</td>
+<td>802.11n</td>
+<td>2009</td>
+<td>2.4GHZ and 5GHZ</td>
+<td>600Mbps</td>
+</tr>
+<tr>
+<td>WI-FI5</td>
+<td>802.11ac Wave1</td>
+<td>2013</td>
+<td>5GHZ</td>
+<td>3.47Gbps</td>
+</tr>
+<tr>
+<td>WI-FI5</td>
+<td>802.11ac Wave2</td>
+<td>2015</td>
+<td>5GHZ</td>
+<td>6.9Gbps</td>
+</tr>
+<tr>
+<td>WI-FI6</td>
+<td>802.11ax</td>
+<td>2018</td>
+<td>2.4GHZ and 5GHZ</td>
+<td>9.6Gbps</td>
+</tr>
+</tbody>
+</table>
+<p>表面上看wifi5和wifi6的理论速率区别不大,但是大部分wifi5产品实际只能到达1Gbps,而wifi6设备确实能够达到理论速率.</p>
+<p>实际上他们的带宽差距接近10倍.</p>
+<p>注意wifi5只有5Ghz,观察openwrt的选项可以发现2.4Ghz只能设置成n或者ax.</p>
+<p>2.4Ghz频段指的是$ [2.4,2.4835] $Ghz.</p>
+<p>5Ghz频段指的是$ [5.15,5.35] <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>G</mi><mi>h</mi><mi>z</mi><mi mathvariant="normal">和</mi></mrow><annotation encoding="application/x-tex">Ghz和</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.69444em;vertical-align:0em;"></span><span class="mord mathdefault">G</span><span class="mord mathdefault">h</span><span class="mord mathdefault" style="margin-right:0.04398em;">z</span><span class="mord cjk_fallback">和</span></span></span></span> [5.725,5.85] $Ghz.</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E7%BB%8F%E9%AA%8C%E5%92%8C%E6%80%BB%E7%BB%93/" class="category-chain-item">经验和总结</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/mii/">#mii</a>
+      
+        <a href="/tags/rj45/">#rj45</a>
+      
+        <a href="/tags/phy/">#phy</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>物理层的那些东西</div>
+      <div>https://zzidun.tech/f8be8220/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>zzidun pavo</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年3月1日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>zzidun-blog</span></a> <a>powerby</a> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

@@ -1,0 +1,809 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/logo.png">
+  <link rel="icon" href="/img/logo.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="zzidun pavo">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="flex flex是一个生成词法分析器的工具. 我们可以编写flex程序,输入到flex. flex会输出一个c代码,这个c代码能够对我们在flex程序中描述的词法做词法分析. 编译这个c代码,可以得到一个可执行文件,这就是词法分析的程序. 如果我们把文本输入到这个可执行文件,就会得到输入文本的词法分析的结果.  flex程序 一个flex程序通常包含三部分,形如 12345&lt;声明部分&amp;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="flex和bison入门并且编写一个计算器">
+<meta property="og:url" content="https://zzidun.tech/3f5950fe/index.html">
+<meta property="og:site_name" content="zzidun blog">
+<meta property="og:description" content="flex flex是一个生成词法分析器的工具. 我们可以编写flex程序,输入到flex. flex会输出一个c代码,这个c代码能够对我们在flex程序中描述的词法做词法分析. 编译这个c代码,可以得到一个可执行文件,这就是词法分析的程序. 如果我们把文本输入到这个可执行文件,就会得到输入文本的词法分析的结果.  flex程序 一个flex程序通常包含三部分,形如 12345&lt;声明部分&amp;">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-03-18T16:57:39.000Z">
+<meta property="article:modified_time" content="2023-01-22T03:04:00.321Z">
+<meta property="article:author" content="zzidun pavo">
+<meta property="article:tag" content="bison">
+<meta property="article:tag" content="flex">
+<meta property="article:tag" content="编译原理">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>flex和bison入门并且编写一个计算器 | zzidun blog</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"zzidun.tech","root":"/","version":"1.9.4","typing":{"enable":false,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/atom.xml" title="zzidun blog" type="application/atom+xml">
+</head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>zzidun&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/4.webp') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle">flex和bison入门并且编写一个计算器</span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-03-18 16:57" pubdate>
+          2022年3月18日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          6.8k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          57 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">flex和bison入门并且编写一个计算器</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <span id="more"></span>
+<h2 id="flex"><a class="markdownIt-Anchor" href="#flex"></a> flex</h2>
+<p>flex是一个生成词法分析器的工具.</p>
+<p>我们可以编写flex程序,输入到flex.</p>
+<p>flex会输出一个c代码,这个c代码能够对我们在flex程序中描述的词法做词法分析.</p>
+<p>编译这个c代码,可以得到一个可执行文件,这就是词法分析的程序.</p>
+<p>如果我们把文本输入到这个可执行文件,就会得到输入文本的词法分析的结果.</p>
+<h3 id="flex程序"><a class="markdownIt-Anchor" href="#flex程序"></a> flex程序</h3>
+<p>一个flex程序通常包含三部分,形如</p>
+<figure class="highlight gcode"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs gcode">&lt;声明部分&gt;<br><span class="hljs-meta">%</span><span class="hljs-meta">%</span><br>&lt;装换规则&gt;<br><span class="hljs-meta">%</span><span class="hljs-meta">%</span><br>&lt;辅助函数&gt;<br></code></pre></td></tr></table></figure>
+<p>这三个部分用<code>%%</code>分割.</p>
+<h4 id="声明部分"><a class="markdownIt-Anchor" href="#声明部分"></a> 声明部分</h4>
+<p>声明部分包含了名称声明和选项设置.</p>
+<p>其中<code>%&#123;</code>和<code>%&#125;</code>之间的内容会被原样复制到生成的C代码的开头,可以编写任意合法的C代码.就像这样</p>
+<figure class="highlight gcode"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs gcode"><span class="hljs-meta">%</span>&#123;<br>	<span class="hljs-comment">/*C代码*/</span><br><span class="hljs-meta">%</span>&#125;<br></code></pre></td></tr></table></figure>
+<p>选项设置的语法如下:</p>
+<figure class="highlight haml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs haml"><span class="hljs-tag">%<span class="hljs-selector-tag">option</span></span> yylineno noyywrap<br></code></pre></td></tr></table></figure>
+<p>以<code>%option</code>开头.</p>
+<p><code>yylineno</code>表示flex生成一个变量<code>yylineno</code>保存当前行号.</p>
+<p><code>noyywrap</code>表示flex不使用<code>yywrap()</code>函数.</p>
+<p>名称声明的语法如下:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">名字</span>&gt;</span> (<span class="hljs-tag">&lt;<span class="hljs-name">正则表达式</span>&gt;</span>)<br></code></pre></td></tr></table></figure>
+<p>这个就是给正则表达式起一个别名.</p>
+<p>关于正则表达式我找到一个<a target="_blank" rel="noopener" href="https://support.google.com/analytics/answer/1034324?hl=zh-Hans">不错的文档</a>.</p>
+<h4 id="装换规则"><a class="markdownIt-Anchor" href="#装换规则"></a> 装换规则</h4>
+<p>每个规则包含模式和动作.</p>
+<p>当词法分析器识别出某个模式时,将执行相应的动作.</p>
+<p>形如:</p>
+<figure class="highlight gherkin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs gherkin"><span class="hljs-variable">&lt;模式&gt;</span><br><span class="hljs-variable">&lt;模式&gt;</span> |<span class="hljs-string"></span><br><span class="hljs-string">&lt;模式&gt; </span>|<br><span class="hljs-variable">&lt;模式&gt;</span> &#123; <span class="hljs-variable">&lt;动作&gt;</span> &#125;<br></code></pre></td></tr></table></figure>
+<p>这里<code>&lt;模式&gt;</code>是一个正则表达式,如果这一行后面没跟东西,那么就没有动作.</p>
+<p>如果后面是一个<code>|</code>,那么表示这个模式和下一行的模式采取相同的动作.</p>
+<p>动作本身用<code>&#123;&#125;</code>括起来.</p>
+<p>在匹配的过程中,会尽量匹配长的字符串</p>
+<p>如果可以匹配多个模式,则使用较早出现的模式.</p>
+<h4 id="辅助函数"><a class="markdownIt-Anchor" href="#辅助函数"></a> 辅助函数</h4>
+<p>可以包含任意合法的C代码,该部分的内容会被复制到生成的C代码中.</p>
+<h2 id="bison"><a class="markdownIt-Anchor" href="#bison"></a> bison</h2>
+<p>语法分析器,根据给定的语法规则将flex生成的token转换成抽象语法树(AST).</p>
+<p>bison的输入是一个<code>.y</code>文件,输出C代码和一个头文件.</p>
+<p>如果把bison和flex输出的C代码编到一起,就能得到一个用于将语言转换成语法树的可执行文件.</p>
+<h3 id="bison语法"><a class="markdownIt-Anchor" href="#bison语法"></a> bison语法</h3>
+<p>bison的输入<code>.y</code>文件包含以下内容.</p>
+<h4 id="定义段"><a class="markdownIt-Anchor" href="#定义段"></a> 定义段</h4>
+<p>在<code>%&#123;</code>和<code>%&#125;</code>之间,以C语法写的一些定义和声明,例如文件包含,宏定义,全局变量定义,函数声明.</p>
+<p>对语法的终结符和非终结符做一些相关声明,形如</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs xml">%<span class="hljs-tag">&lt;<span class="hljs-name">选项</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">值1</span>&gt;</span> <span class="hljs-tag">&lt;<span class="hljs-name">值2</span>&gt;</span> ...<br></code></pre></td></tr></table></figure>
+<p>越后定义的终结符优先级越高.</p>
+<table>
+<thead>
+<tr>
+<th>选项</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>%token</code></td>
+<td>定义词法中使用的终结符</td>
+</tr>
+<tr>
+<td><code>%left</code></td>
+<td>左结合</td>
+</tr>
+<tr>
+<td><code>%right</code></td>
+<td>右结合</td>
+</tr>
+<tr>
+<td><code>%nonassoc</code></td>
+<td>不可结合</td>
+</tr>
+<tr>
+<td><code>%union</code></td>
+<td>声明终结符的类型</td>
+</tr>
+<tr>
+<td><code>%type</code></td>
+<td>非终结符的类型</td>
+</tr>
+<tr>
+<td><code>%start</code></td>
+<td>声明起始规则,如果不声明,那就是第一个规则作为起始规则</td>
+</tr>
+</tbody>
+</table>
+<h4 id="语法规则段"><a class="markdownIt-Anchor" href="#语法规则段"></a> 语法规则段</h4>
+<p>形如这样</p>
+<figure class="highlight gams"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs gams"><span class="hljs-built_in">exp</span> : <span class="hljs-built_in">exp</span> <span class="hljs-string">&#x27;+&#x27;</span> <span class="hljs-built_in">exp</span> &#123; <span class="hljs-symbol">$</span><span class="hljs-symbol">$</span> = newast(<span class="hljs-string">&#x27;+&#x27;</span>, <span class="hljs-symbol">$</span><span class="hljs-number">1</span>, <span class="hljs-symbol">$</span><span class="hljs-number">3</span>)；&#125;<br>    | <span class="hljs-built_in">exp</span> CMP <span class="hljs-built_in">exp</span> &#123; <span class="hljs-symbol">$</span><span class="hljs-symbol">$</span> = newast(<span class="hljs-symbol">$</span><span class="hljs-number">2</span>, <span class="hljs-symbol">$</span><span class="hljs-number">1</span>, <span class="hljs-symbol">$</span><span class="hljs-number">3</span>)；&#125;<br>		| <span class="hljs-string">&#x27;(&#x27;</span> <span class="hljs-built_in">exp</span> <span class="hljs-string">&#x27;)&#x27;</span> &#123; <span class="hljs-symbol">$</span><span class="hljs-symbol">$</span> = newast(<span class="hljs-symbol">$</span><span class="hljs-number">1</span>)；&#125;<br></code></pre></td></tr></table></figure>
+<p>这里表示exp的几种形式,如果满足其中一种,那么就执行这种模式同一行的行为.</p>
+<h4 id="辅助函数段"><a class="markdownIt-Anchor" href="#辅助函数段"></a> 辅助函数段</h4>
+<p>可以包含任意合法的C代码,该部分的内容会被复制到生成的C代码中.</p>
+<h2 id="实现计算器"><a class="markdownIt-Anchor" href="#实现计算器"></a> 实现计算器</h2>
+<p>我觉得,如果使用bison和flex,应该是先写<code>calc.y</code>文件,再写<code>calc.l</code>文件.</p>
+<p>因为<code>calc.y</code>文件经过bison处理之后,会产生一个<code>calc.tab.h</code>文件</p>
+<p><code>calc.l</code>文件需要包含这个<code>calc.tab.h</code>文件.</p>
+<p>也就是先写语法分析再写词法分析.</p>
+<h3 id="语法分析"><a class="markdownIt-Anchor" href="#语法分析"></a> 语法分析</h3>
+<p><code>calc.y</code>文件需要做以下事情</p>
+<h4 id="定义段-2"><a class="markdownIt-Anchor" href="#定义段-2"></a> 定义段</h4>
+<p>在定义段需要</p>
+<ol>
+<li>
+<p>用<code>%&#123; &lt;C语言&gt; %&#125;</code>包含辅助函数所需的头文件.这里我们只需要<code>stdio.h</code>和<code>stdlib.h</code></p>
+</li>
+<li>
+<p>用<code>%&#123; &lt;C语言&gt; %&#125;</code>声明函数<code>yylex()</code>和<code>yyerror()</code>.(<code>yylex()</code>不需要我们自己实现,flex会生成他的C代码,<code>yyerror()</code>我们需要在辅助函数段实现).其实不声明也可以,gcc能够自己找到他们的定义,但是会警告.</p>
+</li>
+</ol>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs cpp">%&#123;<br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdlib.h&gt;</span></span><br><br><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">yylex</span><span class="hljs-params">()</span></span>;<br><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">yyerror</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *s)</span></span>;<br>%&#125;<br></code></pre></td></tr></table></figure>
+<ol start="3">
+<li>用<code>%union</code>定义我们要用到的类型,并给他们命名.这个例子里面我们只需要用到<code>double</code>,我们给他起名为<code>double_value</code>.</li>
+</ol>
+<figure class="highlight angelscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs angelscript">%union &#123;<br>  <span class="hljs-built_in">double</span> <span class="hljs-built_in">double</span>_value;<br>&#125;<br></code></pre></td></tr></table></figure>
+<ol start="4">
+<li>用<code>%token</code>定义终结符,有一些终结符需要定义类型,定义类型使用上面<code>%union</code>中命名的类型.这里<code>DOUBLE_LITERAL</code>需要定义类型为上面的<code>double_value</code>.</li>
+</ol>
+<figure class="highlight haml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs haml"><span class="hljs-tag">%<span class="hljs-selector-tag">token</span></span> &lt;double_value&gt; DOUBLE_LITERAL<br><span class="hljs-tag">%<span class="hljs-selector-tag">token</span></span> ADD SUB MUL DIV CR LP RP<br></code></pre></td></tr></table></figure>
+<p>这里的<code>ADD SUB MUL DIV CR LP RP</code>分别是加号,减号,乘号,除号.换行,左括号,右括号.</p>
+<p>他们在词法分析中也有出现.</p>
+<ol start="5">
+<li>用<code>%type</code>定义非终结符的类型,定义类型使用上面<code>%union</code>中命名的类型.</li>
+</ol>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs pgsql"><span class="hljs-meta">%type</span> &lt;double_value&gt; expression term primary_expression<br></code></pre></td></tr></table></figure>
+<p>这里的<code>expression</code>是只含加减操作和<code>term</code>的表达式.<code>term</code>是只含乘除操作和<code>primary_expression</code>的表达式.<code>primary_expression</code>是一个数字或带符号和括号的表达式.</p>
+<p>显然这些表达式的结果都是<code>double</code>.</p>
+<h4 id="语法规则段-2"><a class="markdownIt-Anchor" href="#语法规则段-2"></a> 语法规则段</h4>
+<p>语法规则段则是定义各个符号由其他什么符号组成,匹配到之后采取什么行动.</p>
+<p>默认第一个规则是起始规则,也就是输入的内容的整体,会被看作是第一个符号.</p>
+<p>输入通常有多行,所以第一个规则定义一个<code>line_lists</code>,他可能是一个<code>line</code>,也可能是多行(也就是<code>line_lists</code>本身加上一个<code>line</code>)</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs arduino">line_list<br>    : line<br>    | line_list line<br>    ;<br></code></pre></td></tr></table></figure>
+<p>这个计算器中,一行放一个表达式,所以<code>line</code>由一个<code>expression</code>和一个换行组成.一旦匹配到<code>line</code>,那就输出<code>line</code>的值.</p>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs perl">line<br>    : expression CR<br>    &#123;<br>        <span class="hljs-keyword">printf</span>(<span class="hljs-string">&quot;&gt;&gt;%lf\n&quot;</span>, $1);<br>    &#125;<br></code></pre></td></tr></table></figure>
+<p>其他的表达式定义如下,这里的<code>$$</code>代表这个符号本身的值,<code>$&lt;数值&gt;</code>代表组成这个符号的各个部分的值.</p>
+<p>由<code>$&lt;数值&gt;</code>可以得到<code>$$</code>,你可以类比通过参数算出返回值.</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><code class="hljs powershell">expression<br>    : term<br>    | expression ADD term<br>    &#123;<br>        <span class="hljs-variable">$</span><span class="hljs-variable">$</span> = <span class="hljs-variable">$1</span> + <span class="hljs-variable">$3</span>;<br>    &#125;<br>    | expression SUB term<br>    &#123;<br>        <span class="hljs-variable">$</span><span class="hljs-variable">$</span> = <span class="hljs-variable">$1</span> - <span class="hljs-variable">$3</span>;<br>    &#125;<br>    ;<br>term<br>    : primary_expression<br>    | term MUL primary_expression<br>    &#123;<br>        <span class="hljs-variable">$</span><span class="hljs-variable">$</span> = <span class="hljs-variable">$1</span> * <span class="hljs-variable">$3</span>;<br>    &#125;<br>    | term DIV primary_expression<br>    &#123;<br>        <span class="hljs-variable">$</span><span class="hljs-variable">$</span> = <span class="hljs-variable">$1</span> / <span class="hljs-variable">$3</span>;<br>    &#125;<br>    ;<br>primary_expression<br>    : DOUBLE_LITERAL<br>    | SUB primary_expression<br>    &#123;<br>        <span class="hljs-variable">$</span><span class="hljs-variable">$</span> = -<span class="hljs-variable">$2</span>;<br>    &#125;<br>    | <span class="hljs-built_in">LP</span> expression <span class="hljs-built_in">RP</span><br>    &#123;<br>        <span class="hljs-variable">$</span><span class="hljs-variable">$</span> = <span class="hljs-variable">$2</span>;<br>    &#125;<br>   ;<br></code></pre></td></tr></table></figure>
+<h4 id="辅助函数段-2"><a class="markdownIt-Anchor" href="#辅助函数段-2"></a> 辅助函数段</h4>
+<p>这里实现<code>yyerror()</code>,用来打印一些信息.</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">yyerror</span><span class="hljs-params">(<span class="hljs-type">char</span> <span class="hljs-type">const</span> *str)</span><br>&#123;<br>    <span class="hljs-keyword">extern</span> <span class="hljs-type">char</span> *yytext;<br>    <span class="hljs-built_in">fprintf</span>(<span class="hljs-built_in">stderr</span>, <span class="hljs-string">&quot;parser error near %s\n&quot;</span>, yytext);<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>这个<code>yytext</code>在词法分析产生的代码中定义,应该就是当前扫到的文本.</p>
+<p>生成的代码中没有<code>main()</code>,我们这里自己定义一个<code>main()</code>,以便后面可以编译成一个可执行文件.</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">()</span><br>&#123;<br>    <span class="hljs-keyword">extern</span> <span class="hljs-type">int</span> <span class="hljs-title function_">yyparse</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span>;<br>    <span class="hljs-keyword">extern</span> FILE *yyin;<br>    yyin = <span class="hljs-built_in">stdin</span>;<br>    <span class="hljs-keyword">if</span> (yyparse())<br>    &#123;<br>        <span class="hljs-built_in">fprintf</span>(<span class="hljs-built_in">stderr</span>, <span class="hljs-string">&quot;Error ! Error! Error!\n&quot;</span>);<br>        <span class="hljs-built_in">exit</span>(<span class="hljs-number">1</span>);<br>    &#125;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p><code>yyparse</code>定义在bison生成的C代码中,他就是这一套操作下来生成的最关键的函数,负责语法分析的主要功能.</p>
+<p>执行之后程序就会开始获取输入,直到遇到输入错误.</p>
+<p>遇到错误会返回非<code>0</code>值.</p>
+<h4 id="代码本体"><a class="markdownIt-Anchor" href="#代码本体"></a> 代码本体</h4>
+<p>我们将它命名为<code>mycalc.y</code></p>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br></pre></td><td class="code"><pre><code class="hljs pgsql">%&#123;<br><span class="hljs-meta">#include &lt;stdio.h&gt;</span><br><span class="hljs-meta">#include &lt;stdlib.h&gt;</span><br><br><span class="hljs-type">int</span> yylex();<br><span class="hljs-type">int</span> yyerror(const <span class="hljs-type">char</span> *s);<br>%&#125;<br><br>%<span class="hljs-keyword">union</span> &#123;<br>  <span class="hljs-type">double</span> double_value;<br>&#125;<br><br>%token &lt;double_value&gt; DOUBLE_LITERAL<br>%token <span class="hljs-keyword">ADD</span> SUB MUL DIV CR LP RP<br><span class="hljs-meta">%type</span> &lt;double_value&gt; expression term primary_expression<br><br>%%<br><br>line_list<br>    : <span class="hljs-type">line</span><br>    | line_list <span class="hljs-type">line</span><br>    ;<br><span class="hljs-type">line</span><br>    : expression CR<br>    &#123;<br>        printf(&quot;&gt;&gt;%lf\n&quot;, <span class="hljs-meta">$1</span>);<br>    &#125;<br>expression<br>    : term<br>    | expression <span class="hljs-keyword">ADD</span> term<br>    &#123;<br>        $$<span class="language-pgsql"> = <span class="hljs-meta">$1</span> + <span class="hljs-meta">$3</span>;</span><br><span class="language-pgsql">    &#125;</span><br><span class="language-pgsql">    | expression SUB term</span><br><span class="language-pgsql">    &#123;</span><br><span class="language-pgsql">        $$</span> = <span class="hljs-meta">$1</span> - <span class="hljs-meta">$3</span>;<br>    &#125;<br>    ;<br>term<br>    : primary_expression<br>    | term MUL primary_expression<br>    &#123;<br>        $$<span class="language-pgsql"> = <span class="hljs-meta">$1</span> * <span class="hljs-meta">$3</span>;</span><br><span class="language-pgsql">    &#125;</span><br><span class="language-pgsql">    | term DIV primary_expression</span><br><span class="language-pgsql">    &#123;</span><br><span class="language-pgsql">        $$</span> = <span class="hljs-meta">$1</span> / <span class="hljs-meta">$3</span>;<br>    &#125;<br>    ;<br>primary_expression<br>    : DOUBLE_LITERAL<br>    | SUB primary_expression<br>    &#123;<br>        $$<span class="language-pgsql"> = -<span class="hljs-meta">$2</span>;</span><br><span class="language-pgsql">    &#125;</span><br><span class="language-pgsql">    | LP expression RP</span><br><span class="language-pgsql">    &#123;</span><br><span class="language-pgsql">        $$</span> = <span class="hljs-meta">$2</span>;<br>    &#125;<br>   ;<br><br>%%<br><br><span class="hljs-type">int</span> yyerror(<span class="hljs-type">char</span> const *str)<br>&#123;<br>    extern <span class="hljs-type">char</span> *yytext;<br>    fprintf(stderr, &quot;parser error near %s\n&quot;, yytext);<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br><br><span class="hljs-type">int</span> main()<br>&#123;<br>    extern <span class="hljs-type">int</span> yyparse(<span class="hljs-type">void</span>);<br>    extern FILE *yyin;<br>    yyin = stdin;<br>    <span class="hljs-keyword">if</span> (yyparse())<br>    &#123;<br>        fprintf(stderr, &quot;Error ! Error! Error!\n&quot;);<br>        <span class="hljs-keyword">exit</span>(<span class="hljs-number">1</span>);<br>    &#125;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="词法分析"><a class="markdownIt-Anchor" href="#词法分析"></a> 词法分析</h3>
+<h4 id="声明部分-2"><a class="markdownIt-Anchor" href="#声明部分-2"></a> 声明部分</h4>
+<ol>
+<li>用<code>%&#123; &lt;C&gt; %&#125;</code>包含后面用到的头文件,这里需要<code>stdio.h</code>和上面bison生成的<code>mycalc.tab.h</code>.</li>
+</ol>
+<p>这里的<code>mycalc.tab.h</code>定义了各种符号的枚举值,词法分析的作用就是根据读到的内容,返回一个在<code>mycalc.tab.h</code>中定义的枚举值.</p>
+<p>执行<code>bison -d mycalc.y</code>可以产生这个头文件和C文件.</p>
+<ol start="2">
+<li>定义一个函数<code>yywrap()</code>.</li>
+</ol>
+<p><code>yywrap()</code>函数的作用是将多个输入文件打包成一个输入，当<code>yylex()</code>函数读入到一个文件结束时，它会向<code>yywrap</code>函数询问，<code>yywrap</code>函数返回<code>1</code>的意思是告诉<code>yylex</code>函数后面没有其他输入文件了，此时<code>yylex</code>函数结束, <code>yywrap</code>函数也可以打开下一个输入文件，再向<code>yylex</code>函数返回<code>0</code>，告诉它后面还有别的输入文件，此时<code>yylex</code>函数会继续解析下一个输入文件。总之，由于我们不考虑连续解析多个文件，因此此处返回<code>1</code>。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs cpp">%&#123;<br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;mycalc.tab.h&quot;</span></span><br><br><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">yywrap</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> </span>&#123;<span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;&#125;<br>%&#125;<br></code></pre></td></tr></table></figure>
+<h4 id="转换规则"><a class="markdownIt-Anchor" href="#转换规则"></a> 转换规则</h4>
+<p>这里主要是各种正则表达式,以及匹配到之后的操作.</p>
+<p>这里匹配到运算符就直接返回一个枚举.</p>
+<p>如果匹配到一个数值,就赋值给<code>yylval</code>.然后返回枚举<code>DOUBLE_LITERAL</code>.</p>
+<p><code>yylval</code>其实就是上面定义的联合体,里面有<code>double_value</code>.</p>
+<p>遇到空白符号无操作.</p>
+<p>其他所有字符(正则表达式<code>.</code>),就报错并且<code>exit(1)</code>.</p>
+<figure class="highlight kotlin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs kotlin"><span class="hljs-string">&quot;+&quot;</span>    &#123; <span class="hljs-keyword">return</span> ADD;	&#125;<br><span class="hljs-string">&quot;-&quot;</span>    &#123; <span class="hljs-keyword">return</span> SUB;	&#125;<br><span class="hljs-string">&quot;*&quot;</span>    &#123; <span class="hljs-keyword">return</span> MUL;	&#125;<br><span class="hljs-string">&quot;/&quot;</span>    &#123; <span class="hljs-keyword">return</span> DIV;	&#125;<br><span class="hljs-string">&quot;(&quot;</span>    &#123; <span class="hljs-keyword">return</span> LP; 	&#125;<br><span class="hljs-string">&quot;)&quot;</span>    &#123; <span class="hljs-keyword">return</span> RP;		&#125;<br><span class="hljs-string">&quot;\n&quot;</span>   &#123; <span class="hljs-keyword">return</span> CR;		&#125;<br>[<span class="hljs-number">0</span>-<span class="hljs-number">9</span>]*(\.[<span class="hljs-number">0</span>-<span class="hljs-number">9</span>]+)? &#123;<br>    double temp;<br>    sscanf(yytext, <span class="hljs-string">&quot;%lf&quot;</span>, &amp;temp);<br>    yylval.double_value = temp;<br>    <span class="hljs-keyword">return</span> DOUBLE_LITERAL;<br>&#125;<br>[ \t] ;<br>. &#123;<br>    fprintf(stderr, <span class="hljs-string">&quot;lexical error.\n&quot;</span>);<br>    exit(<span class="hljs-number">1</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+<h4 id="辅助函数-2"><a class="markdownIt-Anchor" href="#辅助函数-2"></a> 辅助函数</h4>
+<p>不需要</p>
+<h4 id="代码本体-2"><a class="markdownIt-Anchor" href="#代码本体-2"></a> 代码本体</h4>
+<p>把这个文件命名为<code>mycalc.l</code></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><code class="hljs cpp">%&#123;<br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&quot;mycalc.tab.h&quot;</span></span><br><br><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">yywrap</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span> </span>&#123;<span class="hljs-keyword">return</span> <span class="hljs-number">1</span>;&#125;<br>%&#125;<br><br>%%<br><br><span class="hljs-string">&quot;+&quot;</span>    &#123; <span class="hljs-keyword">return</span> ADD;	&#125;<br><span class="hljs-string">&quot;-&quot;</span>    &#123; <span class="hljs-keyword">return</span> SUB;	&#125;<br><span class="hljs-string">&quot;*&quot;</span>    &#123; <span class="hljs-keyword">return</span> MUL;	&#125;<br><span class="hljs-string">&quot;/&quot;</span>    &#123; <span class="hljs-keyword">return</span> DIV;	&#125;<br><span class="hljs-string">&quot;(&quot;</span>    &#123; <span class="hljs-keyword">return</span> LP; 	&#125;<br><span class="hljs-string">&quot;)&quot;</span>    &#123; <span class="hljs-keyword">return</span> RP;		&#125;<br><span class="hljs-string">&quot;\n&quot;</span>   &#123; <span class="hljs-keyword">return</span> CR;		&#125;<br>[<span class="hljs-number">0</span><span class="hljs-number">-9</span>]*(\.[<span class="hljs-number">0</span><span class="hljs-number">-9</span>]+)? &#123;<br>    <span class="hljs-type">double</span> temp;<br>    <span class="hljs-built_in">sscanf</span>(yytext, <span class="hljs-string">&quot;%lf&quot;</span>, &amp;temp);<br>    yylval.double_value = temp;<br>    <span class="hljs-keyword">return</span> DOUBLE_LITERAL;<br>&#125;<br>[ \t] ;<br>. &#123;<br>    <span class="hljs-built_in">fprintf</span>(stderr, <span class="hljs-string">&quot;lexical error.\n&quot;</span>);<br>    <span class="hljs-built_in">exit</span>(<span class="hljs-number">1</span>);<br>&#125;<br><br>%%<br></code></pre></td></tr></table></figure>
+<h3 id="编译"><a class="markdownIt-Anchor" href="#编译"></a> 编译</h3>
+<p>执行这个命令生成语法分析代码</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs mipsasm"><span class="hljs-keyword">bison </span>-dv mycalc.y<br></code></pre></td></tr></table></figure>
+<p><code>-d</code>表示生成头文件,<code>-v</code>表示同时生成一个<code>.output</code>文件,这里面有一些详情.</p>
+<p>执行这个命令生成词法分析代码</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs css"><span class="hljs-attribute">flex</span> mycalc<span class="hljs-selector-class">.l</span><br></code></pre></td></tr></table></figure>
+<p>这时候会得到<code>lex.yy.c</code>(词法分析), <code>mycalc.tab.c</code>(语法分析), <code>mycalc.tab.h</code>(头文件).</p>
+<p>用以下命令,把他们编译可执行文件<code>mycalc</code>.</p>
+<figure class="highlight llvm"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs llvm"><span class="hljs-keyword">cc</span> -o mycalc mycalc.tab.<span class="hljs-keyword">c</span> lex.yy.<span class="hljs-keyword">c</span><br></code></pre></td></tr></table></figure>
+<p>然后可以手动测试一下这个可执行文件.</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E7%BB%8F%E9%AA%8C%E5%92%8C%E6%80%BB%E7%BB%93/" class="category-chain-item">经验和总结</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/bison/">#bison</a>
+      
+        <a href="/tags/flex/">#flex</a>
+      
+        <a href="/tags/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/">#编译原理</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>flex和bison入门并且编写一个计算器</div>
+      <div>https://zzidun.tech/3f5950fe/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>zzidun pavo</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年3月18日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>zzidun-blog</span></a> <a>powerby</a> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
