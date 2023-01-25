@@ -27,7 +27,7 @@
 <meta property="og:image" content="https://zzidun.tech/img/zrzd3_2.png">
 <meta property="og:image" content="https://zzidun.tech/img/zrzd3_3.png">
 <meta property="article:published_time" content="2023-01-22T12:39:33.000Z">
-<meta property="article:modified_time" content="2023-01-25T05:38:52.035Z">
+<meta property="article:modified_time" content="2023-01-25T05:45:23.364Z">
 <meta property="article:author" content="zzidun pavo">
 <meta property="article:tag" content="转载">
 <meta name="twitter:card" content="summary_large_image">
@@ -318,7 +318,7 @@
 <p><a href="#%E8%BD%AF%E4%BB%B6%E5%B9%BB%E7%81%AD">软件幻灭</a></p>
 </li>
 <li>
-<p><a href="#%E4%B8%BA%E4%BB%80%E4%B9%88Ubuntu%E7%9A%84Snap%E6%98%AF%E4%B8%8D%E5%8F%97%E6%AC%A2%E8%BF%8E%E7%9A%84">为什么Ubuntu的Snap是不受欢迎的</a></p>
+<p><a href="#%E4%B8%BA%E4%BB%80%E4%B9%88ubuntu%E7%9A%84snap%E4%B8%8D%E5%8F%97%E6%AC%A2%E8%BF%8E">为什么ubuntu的snap不受欢迎</a></p>
 </li>
 </ol>
 <h1 id="完全使用linux工作"><a class="markdownIt-Anchor" href="#完全使用linux工作"></a> 完全使用linux工作</h1>
@@ -671,7 +671,7 @@
 <p>今天我们拥有的不是进步，我们用简陋的工具构建勉强符合业务需求的软件。我们被困在局部的最佳状态，没人愿意离开。这不是一个好地方，这里体积膨胀而且低效。我们只是习惯了而已。</p>
 <p>所以我想提出：我们今天所在的地方是糟糕的。作为工程师，我们有能力也应该做得更好。我们应该有更好的工具，我们应该构建更好的应用，更快，更可预测，更可靠，资源消耗更低（低几个数量级！）。我们应该深入理解我们在做什么以及为什么要做。我们可靠、可预测、最高质量的交付。我们有能力也应该为我们的工作感到自豪。我们不应该只是“交付我们已有的。。。“，没有但是！</p>
 <p>我希望我不孤单。我希望有更多的人也想这么做。如果我们现在能够开始讨论软件行业的现状有多糟糕，我也会感到欣慰。或许我们能找到出路。</p>
-<h1 id="为什么ubuntu的snap是不受欢迎的"><a class="markdownIt-Anchor" href="#为什么ubuntu的snap是不受欢迎的"></a> 为什么Ubuntu的Snap是不受欢迎的</h1>
+<h1 id="为什么ubuntu的snap不受欢迎"><a class="markdownIt-Anchor" href="#为什么ubuntu的snap不受欢迎"></a> 为什么ubuntu的snap不受欢迎</h1>
 <p>最近在Github上发现了一个非常有意思的开源项目，名称是<code>unsnap</code></p>
 <p>这个开源项目是做什么的呢，它是卸载你Linux系统上的Snap包管理，而使用flatpak来取代它。</p>
 <p>事实上，Ubuntu的Snap包越来越不受到欢迎，Linux Mint 20甚至删除与禁止了Snap，这又是怎么一回事呢？<br />
@@ -699,7 +699,7 @@ Ubuntu与Snap</p>
 <p>这并不是什么坏现象，对吧。但可惜事实是，Snap越发的不受到欢迎。</p>
 <p>什么原因？听我道来。</p>
 <h2 id="snap与apt"><a class="markdownIt-Anchor" href="#snap与apt"></a> Snap与APT</h2>
-<p>在说Snap为什么不受欢迎之前，说回Snap和APT的这两者的关系与冲突吧。</p>
+<p>在说Snap为什么ubuntu的snap不受欢迎之前，说回Snap和APT的这两者的关系与冲突吧。</p>
 <p>如我以前在相关的文章中也阐述过了，Ubuntu其实是基于Debian基础之上构建的操作系统，而Debian使用的是APT包管理。</p>
 <p>APT包管理其实是你可以简单理解为deb + 依赖管理，它是基于deb之上的包管理工具。</p>
 <p>所以，问题就来了，Ubuntu做为一个debian系的操作系统，其本身是带有APT包管理的，现在自己又整了个Snap包管理，理所当然的这两者是存在冲突的了。</p>
