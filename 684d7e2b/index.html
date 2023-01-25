@@ -23,11 +23,15 @@
 <meta property="og:site_name" content="zzidun&#39;s blog">
 <meta property="og:description" content="这些文章在精神上影响过我.">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://zzidun.tech/images/zrzd3_1.png">
+<meta property="og:image" content="https://zzidun.tech/images/zrzd3_2.png">
+<meta property="og:image" content="https://zzidun.tech/images/zrzd3_3.png">
 <meta property="article:published_time" content="2023-01-22T12:39:33.000Z">
-<meta property="article:modified_time" content="2023-01-22T06:12:25.960Z">
+<meta property="article:modified_time" content="2023-01-25T05:33:47.271Z">
 <meta property="article:author" content="zzidun pavo">
 <meta property="article:tag" content="转载">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://zzidun.tech/images/zrzd3_1.png">
   
   
   
@@ -233,7 +237,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          35k 字
+          38k 字
         
       </span>
     
@@ -244,7 +248,7 @@
         
         
         
-          288 分钟
+          315 分钟
         
       </span>
     
@@ -313,6 +317,9 @@
 </li>
 <li>
 <p><a href="#%E8%BD%AF%E4%BB%B6%E5%B9%BB%E7%81%AD">软件幻灭</a></p>
+</li>
+<li>
+<p><a href="#%E4%B8%BA%E4%BB%80%E4%B9%88Ubuntu%E7%9A%84Snap%E6%98%AF%E4%B8%8D%E5%8F%97%E6%AC%A2%E8%BF%8E%E7%9A%84">为什么Ubuntu的Snap是不受欢迎的</a></p>
 </li>
 </ol>
 <h1 id="完全使用linux工作"><a class="markdownIt-Anchor" href="#完全使用linux工作"></a> 完全使用linux工作</h1>
@@ -665,6 +672,76 @@
 <p>今天我们拥有的不是进步，我们用简陋的工具构建勉强符合业务需求的软件。我们被困在局部的最佳状态，没人愿意离开。这不是一个好地方，这里体积膨胀而且低效。我们只是习惯了而已。</p>
 <p>所以我想提出：我们今天所在的地方是糟糕的。作为工程师，我们有能力也应该做得更好。我们应该有更好的工具，我们应该构建更好的应用，更快，更可预测，更可靠，资源消耗更低（低几个数量级！）。我们应该深入理解我们在做什么以及为什么要做。我们可靠、可预测、最高质量的交付。我们有能力也应该为我们的工作感到自豪。我们不应该只是“交付我们已有的。。。“，没有但是！</p>
 <p>我希望我不孤单。我希望有更多的人也想这么做。如果我们现在能够开始讨论软件行业的现状有多糟糕，我也会感到欣慰。或许我们能找到出路。</p>
+<h1 id="为什么ubuntu的snap是不受欢迎的"><a class="markdownIt-Anchor" href="#为什么ubuntu的snap是不受欢迎的"></a> 为什么Ubuntu的Snap是不受欢迎的</h1>
+<p>最近在Github上发现了一个非常有意思的开源项目，名称是<code>unsnap</code></p>
+<p>这个开源项目是做什么的呢，它是卸载你Linux系统上的Snap包管理，而使用flatpak来取代它。</p>
+<p>事实上，Ubuntu的Snap包越来越不受到欢迎，Linux Mint 20甚至删除与禁止了Snap，这又是怎么一回事呢？<br />
+从Linux软件安装说起</p>
+<p>Linux这个操作系统，程序员或多或少都接触或使用过，但Snap包管理，可能并不一定大家都非常清楚。所以我就从Linux的软件安装方式说起。</p>
+<p>无论是哪个Linux，任何发行版本，安装软件基本上有以下几种方式：</p>
+<blockquote>
+<p>使用源码编译软件，这是最原始的，当然也是最有难度的，对人员能力有较高的要求。<br />
+不同系的特定软件包，最常见的两个就是以Debian系为主的DEB包以及REHL系为主的RPM包<br />
+不同系的软件包管理工具，DEB也好，RPM也好，都存在依赖问题，安装起来不一定方便。因此在它们的基础之上，产生了APT包管理(Debian系)以及YUM包管理(RPM系)</p>
+</blockquote>
+<p>过往，这是主流的几种方式。</p>
+<p>但是上面几种方式都存在一个共同的特点，就是：不够通用</p>
+<p>源码编译就不说了，无论是DEB还是APT包管理等，任何一个软件想要适配不同的Linux操作系统，都要在不同的系中折腾一次，分别发布DEB包，RPM包等。总而言之，就是不够通用。</p>
+<p>所以，近些年来，Linux上产生了新的包管理方式，就是通用包。</p>
+<p>在Linux的通用包中，最流行的属于AppImage,Snap以及Flatpak。这些管理方式与上述的几种方式的最大差别在于：</p>
+<p>它们是通用的，几乎支持所有Linux系统</p>
+<p>那它们是怎么做到的？</p>
+<p>原理比较简单，它们改变过往的Linux软件对操作系统级别类库的依赖的做法，直接将所有依赖全整到自己的软件包内。这样就比较具有通用性了。</p>
+<p>那很显然，这就会明显出现一个问题，这些包管理方式的体积都是非常大的。</p>
+<p>当然，我不是来比较这些包发行版本的优缺点的，这里就略过不提。<br />
+Ubuntu与Snap</p>
+<p>回到Snap包管理上来吧，在我上面说的AppImage，Snap，以及Flatpak这三种流行的包管理方式中，其中Snap是Ubuntu的杰作，也就是Ubuntu背后的公司Canonical搞的，所以Snap都会随着Ubuntu一起发行。</p>
+<p>由于Ubuntu在Linux操作系统中占有非常重要地位，使用率非常高。连带的导致Snap也被使用的越来越多。</p>
+<p>这并不是什么坏现象，对吧。但可惜事实是，Snap越发的不受到欢迎。</p>
+<p>什么原因？听我道来。</p>
+<h2 id="snap与apt"><a class="markdownIt-Anchor" href="#snap与apt"></a> Snap与APT</h2>
+<p>在说Snap为什么不受欢迎之前，说回Snap和APT的这两者的关系与冲突吧。</p>
+<p>如我以前在相关的文章中也阐述过了，Ubuntu其实是基于Debian基础之上构建的操作系统，而Debian使用的是APT包管理。</p>
+<p>APT包管理其实是你可以简单理解为deb + 依赖管理，它是基于deb之上的包管理工具。</p>
+<p>所以，问题就来了，Ubuntu做为一个debian系的操作系统，其本身是带有APT包管理的，现在自己又整了个Snap包管理，理所当然的这两者是存在冲突的了。</p>
+<p>Ubuntu承诺不会移除APT包管理，当然Ubuntu一直也做到了，现在无论在哪个Ubuntu的发行版本中，你仍然可以使用APT来安装软件。</p>
+<p>但这不表示冲突就不存在，Ubuntu本身是肯定有偏好的。作为一个商业公司，把资源投入到自己的产品中，这也是理所当然的吧。毕竟这也是建立生态与产品护城河的一种方式。</p>
+<p>比如Ubuntu的软件商店管理其实是基于Snap而不是APT的。你用Ubuntu的商店安装的软件全是Snap格式的，并不是DEB格式的。</p>
+<p>Snap的性能比Deb还是差很多，这一点就先不说了。</p>
+<p>更夸张的是，Ubuntu走的有点过了，做出了一些令人难以接受的操作，比如当你在Ubuntu上输入下述命令时：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">sudo apt install chromium #使用APT来安装开源的chromium<br></code></pre></td></tr></table></figure>
+<p>这个命令的本意是使用apt来安装chromium浏览器，apt是deb包管理，当然安装的应该是chromium的deb包才对。</p>
+<p>只可惜，在Ubuntu中，如果你使用的是上述命令，安装的却是chromium的snap版本。</p>
+<p>Ubuntu的这种行为，已经明显越界了。甚至我们可以理解为它在APT中添加了特别的后门逻辑与程序来达到它的目的。</p>
+<h2 id="snap到底怎么了"><a class="markdownIt-Anchor" href="#snap到底怎么了"></a> Snap到底怎么了？</h2>
+<p>Snap有很多问题，比如几个比较明显的缺点是性能相对较差，软件包的体积大，中心化的软件商店，不透明的运行机制等，但最关键的一个点在于：</p>
+<p>它违背了Linux操作系统的理念与精神</p>
+<p>不管Linux有多少个发行版本，它们始终都有一个共同的理念与精神，就是遵守开源与自由的理念。</p>
+<p>因为这个理念与精神，你可以发现，所有Linux都是开源与自由的操作系统。无论是在桌面还是服务器领域，你可以随心所欲地切换任何一个系统不会被限制。</p>
+<p>就算是Redhat这样的商业巨头，它的YUM包管理，也是开源与自由的，并不只属于Redhat。比如CentOS可以建立自己的YUM软件仓库。</p>
+<p>但Ubuntu的Snap越过了这个界线，虽然它有一部分是开源的，但事实上，Snap是一个中心化的包管理，它有一个类似App Store这样的中心存在，当然是由Canonical来维护管理的。</p>
+<p>而除了Canonical以外，其它都无法复制或运营一个自己的Snap软件管理中心，也就是你只能使用Canonical的这个。因为它有一些专有实现在其中。</p>
+<p>这种行为，已经明显违背了Linux操作系统的核心理念与精神，在开源与自由的Linux中，是不可能受到欢迎的。</p>
+<p>Ubuntu的这些行为受到了明显的批评与抵制，Linux Mint在其最新20版本中，已经删除了Snap包管理，并默认不允许安装Snap。</p>
+<h2 id="linux-mint关于移除snap的申明"><a class="markdownIt-Anchor" href="#linux-mint关于移除snap的申明"></a> Linux Mint关于移除Snap的申明</h2>
+<blockquote>
+<p>Following the decision made by Canonical to replace parts of APT with Snap and have the Ubuntu Store install itself without users knowledge or consent, the Snap Store is forbidden to be installed by APT in Linux Mint 20.</p>
+</blockquote>
+<p>翻译:</p>
+<blockquote>
+<p>在 Canonical 决定用 Snap 替换部分 APT, 并让 Ubuntu Store 在用户不知情或未经同意的情况下自行安装后, Linux Mint 20 系统禁止了使用apt安装 Snap Store。</p>
+</blockquote>
+<h2 id="canonical与redhat"><a class="markdownIt-Anchor" href="#canonical与redhat"></a> Canonical与Redhat</h2>
+<p>最后，说起Linux，就不得不说起Redhat与Canonical这两个商业公司，Redhat是服务器领域非常知名的Linux商业公司，而Canonical则在桌面Linux做的非常出色。</p>
+<p>但Redhat明显非常克制，它一直都是非常遵守自由与开源的理念，Redhat通过售卖专业的服务来赚取利润，而在过往的十多年中，Redhat始终是Linux内核的最大贡献商业公司。REHL也是原始的Linux发行版本，类似CentOS这样的，是REHL开源的受益者。</p>
+<p>而相比之下，Canonical的Ubuntu本身是基于Debian基础之上的再发行版本，Linux内核的贡献也远远比不上Redhat，还整出了Snap这种专有的中心化的专有包软件管理，步伐迈的有点过大了。</p>
+<p>作为商业公司，通过各种方式赚取利润是理所当然的，但要遵守你所有的领域的基本理念与原则也应该属于最基本的操守。</p>
+<p>Ubuntu对于在桌面Linux的卓越贡献当然是值得赞赏的，但它在Snap的这种行为上，理所当然主流都不会欢迎它的。</p>
+<p>所以，现在你知道为什么Snap包管理不受欢迎了吧。</p>
+<h2 id="向众人展示-本文下面的一个评论者"><a class="markdownIt-Anchor" href="#向众人展示-本文下面的一个评论者"></a> 向众人展示, 本文下面的一个评论者</h2>
+<p><img src="/images/zrzd3_1.png" srcset="/img/loading.gif" lazyload alt="" /></p>
+<p><img src="/images/zrzd3_2.png" srcset="/img/loading.gif" lazyload alt="" /></p>
+<p><img src="/images/zrzd3_3.png" srcset="/img/loading.gif" lazyload alt="" /></p>
 
                 
               </div>
