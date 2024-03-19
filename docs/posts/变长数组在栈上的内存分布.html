@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>变长数组在栈上的内存分布 - zzidun的博客</title>
+        <link rel="stylesheet" href="../css/default.css" />
+        <link rel="shortcut icon" href="../images/zzidun-logo.png" type="image/x-icon" />
+    </head>
+    <body>
+        <header>
+            <div class="logo">
+                <a href="../">zzidun的博客</a>
+            </div>
+            <nav>
+                <a href="../">主页</a>
+                <a href="../about.html">关于</a>
+                <a href="../contact.html">联系</a>
+                <a href="../archive.html">归档</a>
+            </nav>
+        </header>
+
+        <main role="main">
+            <h1>变长数组在栈上的内存分布</h1>
+            <article>
+    <section class="header">
+        Posted on August  6, 2022
+        
+            by zzidun
+        
+    </section>
+    <section>
+        <h1 id="栈">栈</h1>
+<p>在编译期间,编译器会计算出一个函数中的所有局部变量需要使用多少的内存.这段内存称为函数的栈.</p>
+<p>在执行一个函数的时候,会在两个寄存器中分别存有两个指针.</p>
+<ol type="1">
+<li><p>栈底指针,指向这段内存的起始位置.在riscv指令集,这个指针通常存在寄存器<code>s0</code>中.</p></li>
+<li><p>栈顶指针,指向这段内存的结束位置.在riscv指令集,这个指针通常存在寄存器<code>sp</code>中.</p></li>
+</ol>
+<p>这个栈是从高地址往低地址数的,也就是说栈顶指针的值其实比栈底指针小.他们的关系是</p>
+<blockquote>
+<p>栈底指针 - 栈大小 = 栈顶指针</p>
+</blockquote>
+<p>假如有函数<code>fun1()</code>调用了<code>fun2()</code>.</p>
+<p>那么当执行到<code>fun2()</code>的时候,<code>fun2()</code>的栈底指针等于<code>fun1()</code>的栈顶指针.</p>
+<p>也就是有这样的关系(假设<code>fun1</code>的栈底指针是<code>x</code>):</p>
+<table>
+<thead>
+<tr class="header">
+<th>地址</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>x</code></td>
+<td><code>fun1</code>的栈底指针</td>
+</tr>
+<tr class="even">
+<td><code>x-fun1的栈大小</code></td>
+<td><code>fun1</code>的栈顶指针</td>
+</tr>
+<tr class="odd">
+<td><code>x-fun1的栈大小</code></td>
+<td><code>fun2</code>的栈底指针</td>
+</tr>
+<tr class="even">
+<td><code>x-(fun1的栈大小+fun2的栈大小)</code></td>
+<td><code>fun2</code>的栈顶指针</td>
+</tr>
+</tbody>
+</table>
+<h1 id="疑惑">疑惑</h1>
+<h2 id="变长数组存储在哪">变长数组存储在哪</h2>
+<p>我在刚学习编译原理的时候,错误地认为每个栈的大小都是在编译期就已经计算好固定了的.</p>
+<p>所以我一直对C99的变长数组感到疑惑.</p>
+<p>如果栈的大小是编译期确定的,也就是变长数组不能存储在栈上,那么它在哪?</p>
+<p>如果变长数组位于栈上,那么它在栈上是怎么分布的,如何被计算出来?难道是在运行期间才能确定栈的大小吗?</p>
+<h2 id="为什么编译器翻译出来的汇编常常使用栈底指针来表示变量的地址">为什么编译器翻译出来的汇编常常使用栈底指针来表示变量的地址</h2>
+<p>如果我们阅读汇编代码,会发现编译器翻译出来的汇编代码常常使用<code>栈底指针+偏移</code>的方式来指出栈上变量的位置.</p>
+<p>只有在刚进入函数的时候,会用<code>栈顶指针+偏移</code>的方式保存上一个函数的信息到当前栈上.</p>
+<p>我曾经非常困惑,如果统一使用<code>栈顶指针+偏移</code>不是更加便于理解吗?</p>
+<h1 id="结论">结论</h1>
+<p>通过对变长数组的汇编代码的阅读, 我发现:</p>
+<ol type="1">
+<li>变长数组确实在栈上.</li>
+<li>栈的大小会在运行期改变.这个时候会修改栈顶指针.</li>
+<li>编译器在翻译的时候会先计算栈的大小<code>x</code>(这个大小不包含变长数组).最初进入函数时,会先分配一个大小为<code>x</code>的栈.</li>
+<li>刚进入函数时,<code>栈顶指针 = 栈底指针 - x</code></li>
+<li>分配了这个大小为<code>x</code>的栈之后,会计算变长数组的大小<code>y</code>.然后直接以新的栈顶指针为变长数组的起始位置,向后再扩张<code>y</code>字节的内存.</li>
+<li>最终,<code>栈顶指针 = 栈底指针 - (x + y)</code></li>
+<li>栈底指针在这个过程中保持不变,因此我们可以一直用栈底指针来找到栈上变量.</li>
+</ol>
+<p>也就是:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>地址区间</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>[栈底指针-x, 栈底指针)</code></td>
+<td>函数中所有的局部变量(不包含变长数组)</td>
+</tr>
+<tr class="even">
+<td><code>[栈底指针-(x+y), 栈底指针-x)</code></td>
+<td>函数中的局部变长数组(此时的地址区间<code>[栈顶指针,栈顶指针+元素大小)</code>是第0个元素的位置)</td>
+</tr>
+</tbody>
+</table>
+<h1 id="汇编句读">汇编句读</h1>
+<h2 id="c语言">C语言</h2>
+<p>一开始我们写下这样的C程序</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> fun<span class="op">(</span><span class="dt">int</span> x<span class="op">)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> a<span class="op">[</span>x<span class="op">];</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    a<span class="op">[</span>x<span class="op">-</span><span class="dv">1</span><span class="op">]</span> <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> a<span class="op">[</span>x<span class="op">-</span><span class="dv">1</span><span class="op">];</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">()</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> x<span class="op">;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    scanf<span class="op">(</span><span class="st">&quot;</span><span class="sc">%d</span><span class="st">&quot;</span><span class="op">,</span> <span class="op">&amp;</span>x<span class="op">);</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    fun<span class="op">(</span>x<span class="op">);</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 id="汇编">汇编</h2>
+<p>如果使用命令<code>riscv64-linux-gnu-gcc a.c -S -O0</code>生成<code>a.s</code>文件,会发现这个文件里有一些让人难以理解的无用计算(计算的结果直接被覆盖,没有用于任何用途).</p>
+<p>例如这一段,大概可以猜测这里做了一个<code>128</code>位的乘法,但是计算出来的结果直接被覆盖.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a># 如果元素大小位2的k次方字节,那么这些数字将会是61-k<span class="op">,</span> <span class="dv">3</span><span class="op">+</span>k<span class="op">,</span> k</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>srli	a0<span class="op">,</span>t1<span class="op">,</span><span class="dv">59</span>	<span class="op">#</span> a0 <span class="op">=</span> t1 <span class="op">&gt;&gt;</span> <span class="dv">59</span>		取t1<span class="op">(</span>也就是数组长度x<span class="op">)</span>的最高<span class="dv">5</span><span class="er">位</span><span class="op">,</span>保存到a5的最低<span class="dv">5</span><span class="er">位上</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>slli	a3<span class="op">,</span>t2<span class="op">,</span><span class="dv">5</span>		<span class="op">#</span> a3 <span class="op">=</span> t2 <span class="op">&lt;&lt;</span> <span class="dv">5</span>		取t2<span class="op">(</span>也就是<span class="dv">0</span><span class="op">)</span>的最低<span class="dv">59</span><span class="er">位</span><span class="op">,</span>保存到a3的最高<span class="dv">59</span><span class="er">位上</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="bu">or</span>	a3<span class="op">,</span>a0<span class="op">,</span>a3		<span class="op">#</span> a3 <span class="op">=</span> a3 <span class="op">|</span> a0		将上面a5<span class="op">(</span>最低<span class="dv">5</span><span class="er">位有值</span><span class="op">)</span>和a3<span class="op">(</span>最高<span class="dv">59</span><span class="er">位有值</span><span class="op">)</span>组合起来<span class="op">,</span>形成一个<span class="dv">64</span><span class="er">位数字</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>slli	a2<span class="op">,</span>t1<span class="op">,</span><span class="dv">5</span>		<span class="op">#</span> a2 <span class="op">=</span> t1 <span class="op">&lt;&lt;</span> <span class="dv">5</span>		取t1<span class="op">(</span>也就是数组长度x<span class="op">)</span>的最低<span class="dv">59</span><span class="er">位</span><span class="op">,</span>保存到a2的最高<span class="dv">59</span><span class="er">位上</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>mv	a3<span class="op">,</span>a1			<span class="op">#</span> a3 <span class="op">=</span> a1			a3被数组长度x覆盖<span class="op">?</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>mv	a6<span class="op">,</span>a3			<span class="op">#</span> a6 <span class="op">=</span> a3</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>li	a7<span class="op">,</span><span class="dv">0</span>			<span class="op">#</span> a7 <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>srli	a3<span class="op">,</span>a6<span class="op">,</span><span class="dv">59</span>	<span class="op">#</span> a3 <span class="op">=</span> a6 <span class="op">&gt;&gt;</span> <span class="dv">59</span>		取a6<span class="op">(</span>也就是数组长度x<span class="op">)</span>的最高<span class="dv">5</span><span class="er">位</span><span class="op">,</span>保存到a3的最低<span class="dv">5</span><span class="er">位上</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>slli	a5<span class="op">,</span>a7<span class="op">,</span><span class="dv">5</span>		<span class="op">#</span> a5 <span class="op">=</span> a7 <span class="op">&lt;&lt;</span> <span class="dv">5</span>		取a7<span class="op">(</span>也就是<span class="dv">0</span><span class="op">)</span>的最低<span class="dv">59</span><span class="er">位</span><span class="op">,</span>保存到a5的最高<span class="dv">59</span><span class="er">位上</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="bu">or</span>	a5<span class="op">,</span>a3<span class="op">,</span>a5		<span class="op">#</span> a5 <span class="op">=</span> a3 <span class="op">|</span> a5		将上面a3<span class="op">(</span>最低<span class="dv">5</span><span class="er">位有值</span><span class="op">)</span>和a5<span class="op">(</span>最高<span class="dv">59</span><span class="er">位有值</span><span class="op">)</span>组合起来<span class="op">,</span>形成一个<span class="dv">64</span><span class="er">位数字</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>slli	a4<span class="op">,</span>a6<span class="op">,</span><span class="dv">5</span>		<span class="op">#</span> a4 <span class="op">=</span> a6 <span class="op">&lt;&lt;</span> <span class="dv">5</span>		取a6<span class="op">(</span>也就是数组长度x<span class="op">)</span>的最低<span class="dv">59</span><span class="er">位</span><span class="op">,</span>保存到a4的最高<span class="dv">59</span><span class="er">位上</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>mv	a5<span class="op">,</span>a1			<span class="op">#</span> a5 <span class="op">=</span> a1			a5被数组长度x覆盖<span class="op">?</span></span></code></pre></div>
+<p>如果使用命令<code>riscv64-linux-gnu-gcc a.c -S -Og</code>生成<code>a.s</code>文件,产生的汇编就会精简这些意义不明的运算,同时又不会过于精简.</p>
+<p>所以下面我们使用加上<code>-Og</code>选项的汇编来讲解.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a># 文件的信息:</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>.<span class="dt">file</span>	<span class="st">&quot;a.c&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>.option pic</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a># fun1的描述信息<span class="op">:</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>.text</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>.<span class="bu">align</span>	<span class="dv">1</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>.globl	fun</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>.type	fun<span class="op">,</span> <span class="fu">@f</span>unction</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a># fun1的汇编<span class="op">:</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="fu">fun:</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    addi	<span class="kw">sp</span><span class="op">,</span><span class="kw">sp</span><span class="op">,-</span><span class="dv">32</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    sd	ra<span class="op">,</span><span class="dv">24</span><span class="op">(</span><span class="kw">sp</span><span class="op">)</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    sd	s0<span class="op">,</span><span class="dv">16</span><span class="op">(</span><span class="kw">sp</span><span class="op">)</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    addi	s0<span class="op">,</span><span class="kw">sp</span><span class="op">,</span><span class="dv">32</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    la	a4<span class="op">,</span>__stack_chk_guard</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    ld	a5<span class="op">,</span> <span class="dv">0</span><span class="op">(</span>a4<span class="op">)</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    sd	a5<span class="op">,</span> <span class="op">-</span><span class="dv">24</span><span class="op">(</span>s0<span class="op">)</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    li	a5<span class="op">,</span> <span class="dv">0</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    slli	a5<span class="op">,</span>a0<span class="op">,</span><span class="dv">2</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    addi	a5<span class="op">,</span>a5<span class="op">,</span><span class="dv">15</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    andi	a5<span class="op">,</span>a5<span class="op">,-</span><span class="dv">16</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    <span class="bu">sub</span>	<span class="kw">sp</span><span class="op">,</span><span class="kw">sp</span><span class="op">,</span>a5</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    addiw	a0<span class="op">,</span>a0<span class="op">,-</span><span class="dv">1</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    slli	a0<span class="op">,</span>a0<span class="op">,</span><span class="dv">2</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    <span class="bu">add</span>	a0<span class="op">,</span><span class="kw">sp</span><span class="op">,</span>a0</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    li	a5<span class="op">,</span><span class="dv">1</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>    sd	a5<span class="op">,</span><span class="dv">0</span><span class="op">(</span>a0<span class="op">)</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>    ld	a3<span class="op">,</span> <span class="op">-</span><span class="dv">24</span><span class="op">(</span>s0<span class="op">)</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>    ld	a5<span class="op">,</span> <span class="dv">0</span><span class="op">(</span>a4<span class="op">)</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>    <span class="bu">xor</span>	a5<span class="op">,</span> a3<span class="op">,</span> a5</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    li	a3<span class="op">,</span> <span class="dv">0</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>    bne	a5<span class="op">,</span>zero<span class="op">,.</span>L4</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>    li	a0<span class="op">,</span><span class="dv">1</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>    addi	<span class="kw">sp</span><span class="op">,</span>s0<span class="op">,-</span><span class="dv">32</span></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>    ld	ra<span class="op">,</span><span class="dv">24</span><span class="op">(</span><span class="kw">sp</span><span class="op">)</span></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>    ld	s0<span class="op">,</span><span class="dv">16</span><span class="op">(</span><span class="kw">sp</span><span class="op">)</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>    addi	<span class="kw">sp</span><span class="op">,</span><span class="kw">sp</span><span class="op">,</span><span class="dv">32</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>    jr	ra</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a><span class="fu">.L4:</span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>    <span class="cf">call</span>	__stack_chk_fail<span class="fu">@</span><span class="er">p</span>lt</span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a># fun1的描述信息<span class="op">:</span></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>.size	fun<span class="op">,</span> <span class="op">.-</span>fun</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>.<span class="bu">section</span>	<span class="op">.</span>rodata<span class="op">.</span>str1<span class="op">.</span><span class="dv">8</span><span class="op">,</span><span class="st">&quot;aMS&quot;</span><span class="op">,</span><span class="fu">@</span><span class="er">p</span>rogbits<span class="op">,</span><span class="dv">1</span></span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>.<span class="bu">align</span>	<span class="dv">3</span></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a># 字符串&quot;%d<span class="st">&quot;的信息:</span></span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a><span class="fu">.LC0:</span></span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>    .string	<span class="st">&quot;%d&quot;</span></span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a># main的描述信息<span class="op">:</span></span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>.text</span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>.<span class="bu">align</span>	<span class="dv">1</span></span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>.globl	main</span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>.type	main<span class="op">,</span> <span class="fu">@f</span>unction</span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a><span class="fu">main:</span></span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>    addi	<span class="kw">sp</span><span class="op">,</span><span class="kw">sp</span><span class="op">,-</span><span class="dv">32</span></span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>    sd	ra<span class="op">,</span><span class="dv">24</span><span class="op">(</span><span class="kw">sp</span><span class="op">)</span></span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a>    sd	s0<span class="op">,</span><span class="dv">16</span><span class="op">(</span><span class="kw">sp</span><span class="op">)</span></span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>    la	s0<span class="op">,</span>__stack_chk_guard</span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>    ld	a5<span class="op">,</span> <span class="dv">0</span><span class="op">(</span>s0<span class="op">)</span></span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>    sd	a5<span class="op">,</span> <span class="dv">8</span><span class="op">(</span><span class="kw">sp</span><span class="op">)</span></span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a>    li	a5<span class="op">,</span> <span class="dv">0</span></span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>    addi	a1<span class="op">,</span><span class="kw">sp</span><span class="op">,</span><span class="dv">4</span></span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a>    lla	a0<span class="op">,.</span>LC0</span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a>    <span class="cf">call</span>	__isoc99_scanf<span class="fu">@</span><span class="er">p</span>lt</span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a>    lw	a0<span class="op">,</span><span class="dv">4</span><span class="op">(</span><span class="kw">sp</span><span class="op">)</span></span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a>    <span class="cf">call</span>	fun</span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a>    ld	a4<span class="op">,</span> <span class="dv">8</span><span class="op">(</span><span class="kw">sp</span><span class="op">)</span></span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a>    ld	a5<span class="op">,</span> <span class="dv">0</span><span class="op">(</span>s0<span class="op">)</span></span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a>    <span class="bu">xor</span>	a5<span class="op">,</span> a4<span class="op">,</span> a5</span>
+<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a>    li	a4<span class="op">,</span> <span class="dv">0</span></span>
+<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a>    bne	a5<span class="op">,</span>zero<span class="op">,.</span>L8</span>
+<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a>    li	a0<span class="op">,</span><span class="dv">0</span></span>
+<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a>    ld	ra<span class="op">,</span><span class="dv">24</span><span class="op">(</span><span class="kw">sp</span><span class="op">)</span></span>
+<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a>    ld	s0<span class="op">,</span><span class="dv">16</span><span class="op">(</span><span class="kw">sp</span><span class="op">)</span></span>
+<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a>    addi	<span class="kw">sp</span><span class="op">,</span><span class="kw">sp</span><span class="op">,</span><span class="dv">32</span></span>
+<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a>    jr	ra</span>
+<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a><span class="fu">.L8:</span></span>
+<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a>    <span class="cf">call</span>	__stack_chk_fail<span class="fu">@</span><span class="er">p</span>lt</span>
+<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a># main的描述信息<span class="op">:</span></span>
+<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a>.size	main<span class="op">,</span> <span class="op">.-</span>main</span>
+<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a>.ident	<span class="st">&quot;GCC: (Ubuntu 11.2.0-16ubuntu1) 11.2.0&quot;</span></span>
+<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a>.<span class="bu">section</span>	<span class="op">.</span>note<span class="op">.</span>GNU<span class="op">-</span>stack<span class="op">,</span><span class="st">&quot;&quot;</span><span class="op">,</span><span class="fu">@</span><span class="er">p</span>rogbits</span></code></pre></div>
+<p>我们摘出<code>fun1()</code>的内容来看:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fun:</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    addi	<span class="kw">sp</span><span class="op">,</span><span class="kw">sp</span><span class="op">,-</span><span class="dv">32</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    sd	ra<span class="op">,</span><span class="dv">24</span><span class="op">(</span><span class="kw">sp</span><span class="op">)</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    sd	s0<span class="op">,</span><span class="dv">16</span><span class="op">(</span><span class="kw">sp</span><span class="op">)</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    addi	s0<span class="op">,</span><span class="kw">sp</span><span class="op">,</span><span class="dv">32</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    la	a4<span class="op">,</span>__stack_chk_guard</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    ld	a5<span class="op">,</span> <span class="dv">0</span><span class="op">(</span>a4<span class="op">)</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    sd	a5<span class="op">,</span> <span class="op">-</span><span class="dv">24</span><span class="op">(</span>s0<span class="op">)</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    li	a5<span class="op">,</span> <span class="dv">0</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    slli	a5<span class="op">,</span>a0<span class="op">,</span><span class="dv">2</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    addi	a5<span class="op">,</span>a5<span class="op">,</span><span class="dv">15</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    andi	a5<span class="op">,</span>a5<span class="op">,-</span><span class="dv">16</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">sub</span>	<span class="kw">sp</span><span class="op">,</span><span class="kw">sp</span><span class="op">,</span>a5</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    addiw	a0<span class="op">,</span>a0<span class="op">,-</span><span class="dv">1</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    slli	a0<span class="op">,</span>a0<span class="op">,</span><span class="dv">2</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="bu">add</span>	a0<span class="op">,</span><span class="kw">sp</span><span class="op">,</span>a0</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    li	a5<span class="op">,</span><span class="dv">1</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    sw	a5<span class="op">,</span><span class="dv">0</span><span class="op">(</span>a0<span class="op">)</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    ld	a3<span class="op">,</span> <span class="op">-</span><span class="dv">24</span><span class="op">(</span>s0<span class="op">)</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    ld	a5<span class="op">,</span> <span class="dv">0</span><span class="op">(</span>a4<span class="op">)</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    <span class="bu">xor</span>	a5<span class="op">,</span> a3<span class="op">,</span> a5</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    li	a3<span class="op">,</span> <span class="dv">0</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    bne	a5<span class="op">,</span>zero<span class="op">,.</span>L4</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    li	a0<span class="op">,</span><span class="dv">1</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    addi	<span class="kw">sp</span><span class="op">,</span>s0<span class="op">,-</span><span class="dv">32</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    ld	ra<span class="op">,</span><span class="dv">24</span><span class="op">(</span><span class="kw">sp</span><span class="op">)</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>    ld	s0<span class="op">,</span><span class="dv">16</span><span class="op">(</span><span class="kw">sp</span><span class="op">)</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>    addi	<span class="kw">sp</span><span class="op">,</span><span class="kw">sp</span><span class="op">,</span><span class="dv">32</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>    jr	ra</span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a><span class="fu">.L4:</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">call</span>	__stack_chk_fail<span class="fu">@</span><span class="er">p</span>lt</span></code></pre></div>
+<h3 id="第一次分配栈内存">第一次分配栈内存</h3>
+<p>首先,一进入函数就执行以下指令为栈分配了<code>32</code>字节的空间.并且保存了上一级函数的信息</p>
+<pre><code>    addi	sp,sp,-32   # sp = sp - 32  栈顶向下扩展32字节, 32字节是一个预计的大小,
+    sd	ra,24(sp)       # *(sp+24) = ra	保存返回地址到[sp+24, sp+32), 也就是将来的[s0-8, s0)
+    sd	s0,16(sp)       # *(sp+16) = s0 保存上一级函数的栈底指针到[sp+16, sp+24), 也就是将来的[s0-16, s0-8)
+    addi	s0,sp,32    # s0 = sp + 32  计算出当前函数的栈底</code></pre>
+<p>目前栈上的内存如下:</p>
+<table>
+<thead>
+<tr class="header">
+<th>位置</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>[s0-8,s0)</code></td>
+<td>返回地址</td>
+</tr>
+<tr class="even">
+<td><code>[s0-16, s0-8)</code></td>
+<td>上一级函数的栈底指针</td>
+</tr>
+<tr class="odd">
+<td><code>[sp, s0-16)</code></td>
+<td>未使用</td>
+</tr>
+</tbody>
+</table>
+<h3 id="设置栈溢出标记">设置栈溢出标记</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>    la	a4<span class="op">,</span>__stack_chk_guard    <span class="op">#</span> 取出栈溢出标记的地址<span class="op">,</span>放到寄存器a4</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    ld	a5<span class="op">,</span> <span class="dv">0</span><span class="op">(</span>a4<span class="op">)</span>               <span class="op">#</span> 取出存放在a4中的地址所指向的<span class="dv">8</span><span class="er">个字节内容</span><span class="op">,</span>存到a5</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    sd	a5<span class="op">,</span> <span class="op">-</span><span class="dv">24</span><span class="op">(</span>s0<span class="op">)</span>             <span class="op">#</span> 将a5中的标记保存到<span class="op">[</span>s0<span class="op">-</span><span class="dv">24</span><span class="op">,</span>s0<span class="op">-</span><span class="dv">16</span><span class="op">),</span></span></code></pre></div>
+<p>详情见另一篇文章{% post_link stack-chk-guard避免栈溢出攻击 %}</p>
+<p>目前栈上的内容如下:</p>
+<table>
+<thead>
+<tr class="header">
+<th>位置</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>[s0-8,s0)</code></td>
+<td>返回地址</td>
+</tr>
+<tr class="even">
+<td><code>[s0-16, s0-8)</code></td>
+<td>上一级函数的栈底指针</td>
+</tr>
+<tr class="odd">
+<td><code>[s0-24, s0-16)</code></td>
+<td>栈溢出标记</td>
+</tr>
+<tr class="even">
+<td><code>[sp, s0-24)</code></td>
+<td>未使用</td>
+</tr>
+</tbody>
+</table>
+<h3 id="计算变长数组大小">计算变长数组大小</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>    li	a5<span class="op">,</span> <span class="dv">0</span>           <span class="op">#</span> a5 <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    slli	a5<span class="op">,</span>a0<span class="op">,</span><span class="dv">2</span>     <span class="op">#</span> a5 <span class="op">=</span> a0 <span class="op">&lt;&lt;</span> <span class="dv">2</span><span class="op">(</span>相当于a5<span class="op">=</span>a0<span class="op">*</span><span class="dv">4</span><span class="op">)</span> 计算出数组大小<span class="op">,</span>每个元素<span class="dv">4</span><span class="er">字节</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    addi	a5<span class="op">,</span>a5<span class="op">,</span><span class="dv">15</span>    <span class="op">#</span> a5 <span class="op">=</span> a5 <span class="op">+</span> <span class="dv">15</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    andi	a5<span class="op">,</span>a5<span class="op">,-</span><span class="dv">16</span>   <span class="op">#</span> a5 <span class="op">=</span> a5 <span class="op">&amp;</span> <span class="op">(-</span><span class="dv">16</span><span class="op">)</span> 这两步是一个位运算的技巧<span class="op">,</span>作用是将a5变为<span class="dv">16</span><span class="er">的倍数</span><span class="op">(</span>向上取整<span class="op">)</span></span></code></pre></div>
+<p>这里的寄存器<code>a0</code>保存了参数<code>x</code>,这是riscv函数调用的习惯.</p>
+<p>计算出数组的大小按照<code>16</code>字节对齐.</p>
+<h3 id="第二次分配栈内存">第二次分配栈内存</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>    <span class="bu">sub</span>	<span class="kw">sp</span><span class="op">,</span><span class="kw">sp</span><span class="op">,</span>a5    <span class="op">#</span> <span class="kw">sp</span> <span class="op">=</span> <span class="kw">sp</span> <span class="op">-</span> a5</span></code></pre></div>
+<p>栈顶指针再向下扩张<code>a5</code>个字节的大小.</p>
+<p>目前栈上的内容如下:</p>
+<table>
+<thead>
+<tr class="header">
+<th>位置</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>[s0-8,s0)</code></td>
+<td>返回地址</td>
+</tr>
+<tr class="even">
+<td><code>[s0-16, s0-8)</code></td>
+<td>上一级函数的栈底指针</td>
+</tr>
+<tr class="odd">
+<td><code>[s0-24, s0-16)</code></td>
+<td>栈溢出标记</td>
+</tr>
+<tr class="even">
+<td><code>[sp+数组大小, s0-24)</code></td>
+<td>未使用</td>
+</tr>
+<tr class="odd">
+<td><code>[sp, sp+数组大小)</code></td>
+<td>变长数组</td>
+</tr>
+</tbody>
+</table>
+<h3 id="操作变长数组">操作变长数组</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>    addiw	a0<span class="op">,</span>a0<span class="op">,-</span><span class="dv">1</span>    <span class="op">#</span> a0 <span class="op">=</span> a0 <span class="op">-</span> <span class="dv">1</span> <span class="dv">32</span><span class="er">位加法</span><span class="op">,</span>计算x<span class="op">-</span><span class="dv">1</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    slli	a0<span class="op">,</span>a0<span class="op">,</span><span class="dv">2</span>     <span class="op">#</span> a0 <span class="op">=</span> a0 <span class="op">&lt;&lt;</span> <span class="dv">2</span><span class="op">(</span>相当于a5<span class="op">=</span>a0<span class="op">*</span><span class="dv">4</span><span class="op">)</span> 计算出第x<span class="op">-</span><span class="dv">1</span><span class="er">个元素相对于数组起点的偏移</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">add</span>	a0<span class="op">,</span><span class="kw">sp</span><span class="op">,</span>a0        <span class="op">#</span> a0 <span class="op">=</span> <span class="kw">sp</span> <span class="op">+</span> a0 计算出第x<span class="op">-</span><span class="dv">1</span><span class="er">个元素的地址</span><span class="op">,</span>也就是<span class="op">[</span><span class="kw">sp</span><span class="op">+</span>a0<span class="op">,</span><span class="kw">sp</span><span class="op">+</span>a0<span class="op">+</span>元素大小<span class="op">)</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    li	a5<span class="op">,</span><span class="dv">1</span>            <span class="op">#</span> a5 <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    sd	a5<span class="op">,</span><span class="dv">0</span><span class="op">(</span>a0<span class="op">)</span>        <span class="op">#</span> <span class="op">*(</span>a0<span class="op">)</span> <span class="op">=</span> a5    给第x<span class="op">-</span><span class="dv">1</span><span class="er">个元素赋值</span></span></code></pre></div>
+<h3 id="检查栈溢出标记">检查栈溢出标记</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>    ld	a3<span class="op">,</span> <span class="op">-</span><span class="dv">24</span><span class="op">(</span>s0<span class="op">)</span>     <span class="op">#</span> 取出之前的标记</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    ld	a5<span class="op">,</span> <span class="dv">0</span><span class="op">(</span>a4<span class="op">)</span>       <span class="op">#</span> 获取一个新的标记</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">xor</span>	a5<span class="op">,</span> a3<span class="op">,</span> a5      <span class="op">#</span> 将原本的标记和新的标记对比<span class="op">,</span>从而检查就标记是否被修改</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    li	a3<span class="op">,</span> <span class="dv">0</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    bne	a5<span class="op">,</span>zero<span class="op">,.</span>L4     <span class="op">#</span> 如果被修改<span class="op">,</span>那么跳转到<span class="op">.</span>L4</span></code></pre></div>
+<p>可以认为地址<code>__stack_chk_fail@plt</code>存有一个处理检查异常的函数.</p>
+<p>一旦检查不通过就会调用他来处理.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">.L4:</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">call</span>	__stack_chk_fail<span class="fu">@</span><span class="er">p</span>lt</span></code></pre></div>
+<h3 id="返回">返回</h3>
+<div class="sourceCode" id="cb12"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>li	a0<span class="op">,</span><span class="dv">1</span>            <span class="op">#</span> a0 <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>addi	<span class="kw">sp</span><span class="op">,</span>s0<span class="op">,-</span><span class="dv">32</span>   <span class="op">#</span> <span class="kw">sp</span> <span class="op">=</span> s0 <span class="op">-</span> <span class="dv">32</span> 恢复第一次分配栈内存时的sp</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>ld	ra<span class="op">,</span><span class="dv">24</span><span class="op">(</span><span class="kw">sp</span><span class="op">)</span>       <span class="op">#</span> 取出之前保存的返回地址</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>ld	s0<span class="op">,</span><span class="dv">16</span><span class="op">(</span><span class="kw">sp</span><span class="op">)</span>       <span class="op">#</span> 取出之前保存的上一级函数的栈底地址</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>addi	<span class="kw">sp</span><span class="op">,</span><span class="kw">sp</span><span class="op">,</span><span class="dv">32</span>    <span class="op">#</span> 恢复sp指针到进入函数之前</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>jr	ra              <span class="op">#</span> 跳转到回上一级函数</span></code></pre></div>
+    </section>
+</article>
+
+        </main>
+
+        <footer>
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </footer>
+    </body>
+</html>

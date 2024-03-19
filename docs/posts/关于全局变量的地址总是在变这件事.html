@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>关于全局变量的地址总是在变这件事 - zzidun的博客</title>
+        <link rel="stylesheet" href="../css/default.css" />
+        <link rel="shortcut icon" href="../images/zzidun-logo.png" type="image/x-icon" />
+    </head>
+    <body>
+        <header>
+            <div class="logo">
+                <a href="../">zzidun的博客</a>
+            </div>
+            <nav>
+                <a href="../">主页</a>
+                <a href="../about.html">关于</a>
+                <a href="../contact.html">联系</a>
+                <a href="../archive.html">归档</a>
+            </nav>
+        </header>
+
+        <main role="main">
+            <h1>关于全局变量的地址总是在变这件事</h1>
+            <article>
+    <section class="header">
+        Posted on March  7, 2022
+        
+            by zzidun
+        
+    </section>
+    <section>
+        <h1 id="起因">起因</h1>
+<p>如果我们写这样的代码</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">/* a.cpp */</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="dt">int</span> a <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">()</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    printf<span class="op">(</span><span class="st">&quot;</span><span class="sc">%p\n</span><span class="st">&quot;</span><span class="op">,</span> <span class="op">&amp;</span>a<span class="op">);</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>然后用命令<code>g++ a.cpp</code>编译.</p>
+<p>会发现每次执行都输出了不同的地址.</p>
+<p>这是因为默认开启了pic,则会让程序产生位置无关的代码.</p>
+<p>程序每次执行,会把各段数据放到一个随机的位置.只保证text段,rodata段等等内容的相对位置确定.</p>
+<p>也就是说每次执行,text段的地址不确定,那么取地址的相关指令所在的位置也不确定.</p>
+<p>执行到取地址的指令时,pc寄存器所存的地址也不确定.</p>
+<p>但是由于各段数据的相对位置是确定的,我们可以知道pc所在的text段,和全局变量所在的rodata段的距离.</p>
+<p>这时候只需要求<code>pc+偏移</code>,就可以知道全局变量所在的地址.</p>
+<p>这时候就会每次执行输出不同的地址.</p>
+<h1 id="汇编代码对比">汇编代码对比</h1>
+<p>我们对比<code>riscv64-linux-gnu-gcc</code>编译上面的代码,生成的汇编代码.</p>
+<p>我们只能用<code>-S</code>参数编译,而不能链接.</p>
+<p>因为关闭pic之后,链接会报错.</p>
+<p>前者是关闭pic,也就是加上<code>-fno-pic</code>参数.</p>
+<pre><code>	.file	&quot;a.cpp&quot;
+	.option nopic
+	.text
+	.section	.sdata,&quot;aw&quot;
+	.align	2
+	.type	_ZL1a, @object
+	.size	_ZL1a, 4
+_ZL1a:
+	.word	1
+	.section	.rodata
+	.align	3
+.LC0:
+	.string	&quot;%p\n&quot;
+	.text
+	.align	1
+	.globl	main
+	.type	main, @function
+main:
+.LFB0:
+	.cfi_startproc
+	addi	sp,sp,-16
+	.cfi_def_cfa_offset 16
+	sd	ra,8(sp)
+	sd	s0,0(sp)
+	.cfi_offset 1, -8
+	.cfi_offset 8, -16
+	addi	s0,sp,16
+	.cfi_def_cfa 8, 0
+	lui	a5,%hi(_ZL1a)
+	addi	a1,a5,%lo(_ZL1a)
+	lui	a5,%hi(.LC0)
+	addi	a0,a5,%lo(.LC0)
+	call	printf
+	li	a5,0
+	mv	a0,a5
+	ld	ra,8(sp)
+	.cfi_restore 1
+	ld	s0,0(sp)
+	.cfi_restore 8
+	.cfi_def_cfa 2, 16
+	addi	sp,sp,16
+	.cfi_def_cfa_offset 0
+	jr	ra
+	.cfi_endproc
+.LFE0:
+	.size	main, .-main
+	.ident	&quot;GCC: (Ubuntu 10.3.0-8ubuntu1) 10.3.0&quot;
+	.section	.note.GNU-stack,&quot;&quot;,@progbits
+</code></pre>
+<p>后者是默认的</p>
+<pre><code>	.file	&quot;a.cpp&quot;
+	.option pic
+	.text
+	.data
+	.align	2
+	.type	_ZL1a, @object
+	.size	_ZL1a, 4
+_ZL1a:
+	.word	1
+	.section	.rodata
+	.align	3
+.LC0:
+	.string	&quot;%p\n&quot;
+	.text
+	.align	1
+	.globl	main
+	.type	main, @function
+main:
+.LFB0:
+	.cfi_startproc
+	addi	sp,sp,-16
+	.cfi_def_cfa_offset 16
+	sd	ra,8(sp)
+	sd	s0,0(sp)
+	.cfi_offset 1, -8
+	.cfi_offset 8, -16
+	addi	s0,sp,16
+	.cfi_def_cfa 8, 0
+	lla	a1,_ZL1a
+	lla	a0,.LC0
+	call	printf@plt
+	li	a5,0
+	mv	a0,a5
+	ld	ra,8(sp)
+	.cfi_restore 1
+	ld	s0,0(sp)
+	.cfi_restore 8
+	.cfi_def_cfa 2, 16
+	addi	sp,sp,16
+	.cfi_def_cfa_offset 0
+	jr	ra
+	.cfi_endproc
+.LFE0:
+	.size	main, .-main
+	.ident	&quot;GCC: (Ubuntu 10.3.0-8ubuntu1) 10.3.0&quot;
+	.section	.note.GNU-stack,&quot;&quot;,@progbits</code></pre>
+<p>主要区别在<code>main</code>函数中:</p>
+<p>前者向<code>printf</code>传参的语句如下</p>
+<pre><code>	lui	a5,%hi(_ZL1a)
+	addi	a1,a5,%lo(_ZL1a)
+	lui	a5,%hi(.LC0)
+	addi	a0,a5,%lo(.LC0)
+	call	printf</code></pre>
+<p>后者向<code>printf</code>传参的语句如下</p>
+<pre><code>	lla	a1,_ZL1a
+	lla	a0,.LC0
+	call	printf@plt</code></pre>
+<p><code>lla a1, _ZL1a</code>等同于相当于以下指令</p>
+<pre><code>auipc a5,%hi(_ZL1a)
+addi a1,a5,%lo(_ZL1a)</code></pre>
+<p>所以后者可以翻译为</p>
+<pre><code>	auipc a5,%hi(_ZL1a)
+	addi a1,a5,%lo(_ZL1a)
+	auipc a5,%hi(.LC0)
+	addi a0,a5,%lo(.LC0)
+	call	printf@plt</code></pre>
+<p><code>lui rd,imm</code>的作用是把立即数<code>imm</code>左移<code>12</code>位,放到寄存器<code>rd</code>的高<code>20</code>位上.</p>
+<p><code>auipc rd,imm</code>的作用是把立即数<code>imm</code>左移<code>12</code>位+寄存器<code>pc</code>的结果,放到寄存器<code>rd</code>的高<code>20</code>位上.</p>
+<p><code>addi rd1,rd2,imm</code>的作用是把寄存器<code>rd2</code>+立即数<code>imm</code>的结果存到寄存器<code>rd1</code>.</p>
+<p>有人会问,这里为什么需要用两条指令来做这个移动.</p>
+<p>首先riscv的指令长度都是32位,这个32位中,需要用5位来表示rd寄存器,7位表示操作类型.</p>
+<p>那么就只剩下20位了,所以一条指令只能给寄存器传20位的立即数.</p>
+<p>所以这里采用了先传20位到寄存器的高位,再用加法把低12位加进去的方法.</p>
+<p>指令如下:</p>
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th>立即数</th>
+<th>寄存器</th>
+<th>操作符号</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>auipc</td>
+<td>20位立即数</td>
+<td>5位寄存器地址</td>
+<td><code>0010111</code></td>
+</tr>
+<tr class="even">
+<td>lui</td>
+<td>20位立即数</td>
+<td>5位寄存器地址</td>
+<td><code>0110111</code></td>
+</tr>
+</tbody>
+</table>
+<p>这里就可以发现,前者每次给<code>printf</code>传入的参数都是固定的数值,后者传入的参数是<code>pc+固定数值</code>.</p>
+<p>这个固定数值就是<code>pc</code>相对于目标的偏移.</p>
+<p>因为每次text段被加载到不同的地址,所以每次执行,寄存器<code>pc</code>的值都不同,输出就不同了.</p>
+    </section>
+</article>
+
+        </main>
+
+        <footer>
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </footer>
+    </body>
+</html>

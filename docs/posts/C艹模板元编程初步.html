@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>C艹模板元编程初步 - zzidun的博客</title>
+        <link rel="stylesheet" href="../css/default.css" />
+        <link rel="shortcut icon" href="../images/zzidun-logo.png" type="image/x-icon" />
+    </head>
+    <body>
+        <header>
+            <div class="logo">
+                <a href="../">zzidun的博客</a>
+            </div>
+            <nav>
+                <a href="../">主页</a>
+                <a href="../about.html">关于</a>
+                <a href="../contact.html">联系</a>
+                <a href="../archive.html">归档</a>
+            </nav>
+        </header>
+
+        <main role="main">
+            <h1>C艹模板元编程初步</h1>
+            <article>
+    <section class="header">
+        Posted on January 22, 2022
+        
+            by zzidun
+        
+    </section>
+    <section>
+        <h1 id="integral_constant">integral_constant</h1>
+<div class="sourceCode" id="cb1"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> _Tp<span class="op">,</span> _Tp __v<span class="op">&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> integral_constant</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">static</span> <span class="kw">constexpr</span> _Tp                  value <span class="op">=</span> __v<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">typedef</span> _Tp                           <span class="dt">value_type</span><span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">typedef</span> integral_constant<span class="op">&lt;</span>_Tp<span class="op">,</span> __v<span class="op">&gt;</span>   type<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">constexpr</span> <span class="kw">operator</span> <span class="dt">value_type</span><span class="op">()</span> <span class="at">const</span> <span class="kw">noexcept</span> <span class="op">{</span> <span class="cf">return</span> value<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#if </span><span class="ot">__cplusplus</span><span class="pp"> &gt; 201103L</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#define __cpp_lib_integral_constant_callable </span><span class="dv">201304</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">constexpr</span> <span class="dt">value_type</span> <span class="kw">operator</span><span class="op">()()</span> <span class="at">const</span> <span class="kw">noexcept</span> <span class="op">{</span> <span class="cf">return</span> value<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<h1 id="constexpr">constexpr</h1>
+<p>在编译期需要用到的值,必须能够在编译期确定.</p>
+<p>如果像是这样:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> get_five<span class="op">()</span> <span class="op">{</span><span class="cf">return</span> <span class="dv">5</span><span class="op">;}</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> some_value<span class="op">[</span>get_five<span class="op">()</span> <span class="op">+</span> <span class="dv">7</span><span class="op">];</span></span></code></pre></div>
+<p>因为<code>fet_five()+7</code>是一个需要在运行时才能确定的值.</p>
+<p>而<code>somve_value</code>的大小必须要在编译期确定,所以以上代码会报错.</p>
+<p><code>C++11</code>有了<code>constexpr</code>.</p>
+<p>可以如果函数符合某些条件,以至于能够在编译期就确定他的返回值,那么加上<code>constexpr</code>能够在编译期使用这个函数的返回值.</p>
+<p>就像上面的代码可以改为</p>
+<pre class="shell"><code>constexpr int get_five() {return 5;}
+
+int some_value[get_five() + 7];</code></pre>
+<h1 id="cpp_lib_integral_constant_callable">__cpp_lib_integral_constant_callable</h1>
+<p>这个宏表示这个函数重载了<code>operator()</code>,至于为什么要把<code>operator()</code>写在<code>#if __cplusplus &gt; 201103L</code>里面,我暂时不清楚.</p>
+<h1 id="成员">成员</h1>
+<p>结构体定义了类型为<code>_Tp</code>的成员<code>value</code>,值为<code>__v</code>.</p>
+<p>并且把<code>_Tp</code>定义为<code>value_type</code>,把这个结构体本身定义为<code>type</code>.</p>
+<p>这些成员都是可以在编译期确定了,也就是可以写一个这样的代码:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>integral_constant<span class="op">&lt;</span><span class="dt">bool</span><span class="op">,</span> <span class="kw">true</span><span class="op">&gt;::</span><span class="dt">value_type</span> the_bool</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">=</span> <span class="bu">std::</span>integral_constant<span class="op">&lt;</span><span class="dt">bool</span><span class="op">,</span> <span class="kw">true</span><span class="op">&gt;::</span>value<span class="op">;</span></span></code></pre></div>
+<p>这个代码虽然没啥卵用,但是这个用法是很有用的.</p>
+<h1 id="operator-value_type">operator value_type()</h1>
+<p>这个函数的作用是:当把这个结构体转成<code>value_type</code>类型时,实际上会返回这个函数的返回值.</p>
+<p>类似的用法如下:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> sample<span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">constexpr</span> <span class="kw">operator</span> <span class="dt">double</span><span class="op">()</span> <span class="at">const</span> <span class="kw">noexcept</span> <span class="op">{</span> <span class="cf">return</span> <span class="fl">1.0</span>；<span class="op">}</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">constexpr</span> <span class="kw">operator</span> <span class="dt">float</span><span class="op">()</span> <span class="at">const</span> <span class="kw">noexcept</span> <span class="op">{</span> <span class="cf">return</span> <span class="fl">2.0</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">()</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    sample the_sample<span class="op">;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="dt">float</span><span class="op">(</span>the_sample<span class="op">)</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="dt">double</span><span class="op">(</span>the_sample<span class="op">)</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h1 id="value_type-operator">value_type operator()()</h1>
+<p>如果有一个类实现了<code>operator()()</code>,我们可以将这个类实例化的对象当成一个函数来用.</p>
+<p>把这个对象当成函数来使用时,他就会执行函数<code>operator()()</code>.</p>
+<p>例如这样:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> sample <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">constexpr</span> <span class="dt">int</span> <span class="kw">operator</span><span class="op">()()</span> <span class="at">const</span> <span class="kw">noexcept</span> <span class="op">{</span> <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">constexpr</span> <span class="dt">int</span> <span class="kw">operator</span><span class="op">()(</span><span class="dt">int</span> a<span class="op">)</span> <span class="at">const</span> <span class="kw">noexcept</span> <span class="op">{</span> <span class="cf">return</span> <span class="dv">1</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">constexpr</span> <span class="dt">int</span> <span class="kw">operator</span><span class="op">()(</span><span class="dt">int</span> a<span class="op">,</span> <span class="dt">int</span> b<span class="op">)</span> <span class="at">const</span> <span class="kw">noexcept</span> <span class="op">{</span> <span class="cf">return</span> <span class="dv">2</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">()</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    sample the_sample<span class="op">;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> the_sample<span class="op">()</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> the_sample<span class="op">(</span><span class="dv">1</span><span class="op">)</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> the_sample<span class="op">(</span><span class="dv">1</span><span class="op">,</span><span class="dv">2</span><span class="op">)</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>知道这几个特性之后,这个结构体的作用就非常明显了.</p>
+<h1 id="true_type和false_type">true_type和false_type</h1>
+<div class="sourceCode" id="cb7"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// The type used as a compile-time boolean with true value.</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> integral_constant<span class="op">&lt;</span><span class="dt">bool</span><span class="op">,</span> <span class="kw">true</span><span class="op">&gt;</span>     <span class="dt">true_type</span><span class="op">;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">/// The type used as a compile-time boolean with false value.</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> integral_constant<span class="op">&lt;</span><span class="dt">bool</span><span class="op">,</span> <span class="kw">false</span><span class="op">&gt;</span>    <span class="dt">false_type</span><span class="op">;</span></span></code></pre></div>
+<p>C++预先定义了这两个结构体,其他很多地方用到.</p>
+<p>这里我们细说<code>true_type</code>,他的表现如下</p>
+<table>
+<thead>
+<tr class="header">
+<th>用法</th>
+<th>效果</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>true_type().value</code></td>
+<td>值<code>true</code></td>
+</tr>
+<tr class="even">
+<td><code>true_type::value_type</code></td>
+<td>类型<code>bool</code></td>
+</tr>
+<tr class="odd">
+<td><code>type</code></td>
+<td>类型<code>integral_constant&lt;bool, true&gt;</code></td>
+</tr>
+<tr class="even">
+<td><code>bool(true_type())</code></td>
+<td>值<code>true</code></td>
+</tr>
+<tr class="odd">
+<td><code>true_type()()</code></td>
+<td>值<code>true</code></td>
+</tr>
+</tbody>
+</table>
+<p>再次强调,这里几个成员,要不就是<code>constexpr</code>变量和函数,要不就是<code>typedef</code>定义的类型.他们都可以在编译期确定.</p>
+<h1 id="conditional">conditional</h1>
+<div class="sourceCode" id="cb8"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="dt">bool</span> _Cond<span class="op">,</span> <span class="kw">typename</span> _Iftrue<span class="op">,</span> <span class="kw">typename</span> _Iffalse<span class="op">&gt;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> conditional</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span> <span class="kw">typedef</span> _Iftrue type<span class="op">;</span> <span class="op">};</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Partial specialization for false.</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> _Iftrue<span class="op">,</span> <span class="kw">typename</span> _Iffalse<span class="op">&gt;</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> conditional<span class="op">&lt;</span><span class="kw">false</span><span class="op">,</span> _Iftrue<span class="op">,</span> _Iffalse<span class="op">&gt;</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span> <span class="kw">typedef</span> _Iffalse type<span class="op">;</span> <span class="op">};</span></span></code></pre></div>
+<p>以上代码根据<code>bool _Cond</code>的值,来决定<code>conditional::type</code>.</p>
+<p>先定义一个模板类,无论如何都把<code>type</code>定义为<code>_Iftrue</code>.</p>
+<p>然后特化这个模板,当<code>_Cond</code>传入<code>false</code>的时候,把<code>type</code>定义为<code>_Iffalse</code>.</p>
+<p>上述的<code>conditonal</code>的第一个模板参数<code>_Cond</code>其实很有说法.</p>
+<p>如果我们直接传布尔值,或者传一个很简单的表达式,那就浪费了.</p>
+<p>因此,C++定义了<code>__or_</code>, <code>__and_</code>等等结构体,来实现复杂的判断.</p>
+<h1 id="or_">__or_</h1>
+<div class="sourceCode" id="cb9"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>  <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span><span class="op">...&gt;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> __or_<span class="op">;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">template</span><span class="op">&lt;&gt;</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> __or_<span class="op">&lt;&gt;</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">:</span> <span class="kw">public</span> <span class="dt">false_type</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span> <span class="op">};</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> _B1<span class="op">&gt;</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> __or_<span class="op">&lt;</span>_B1<span class="op">&gt;</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">:</span> <span class="kw">public</span> _B1</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span> <span class="op">};</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> _B1<span class="op">,</span> <span class="kw">typename</span> _B2<span class="op">&gt;</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> __or_<span class="op">&lt;</span>_B1<span class="op">,</span> _B2<span class="op">&gt;</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">:</span> <span class="kw">public</span> conditional<span class="op">&lt;</span>_B1<span class="op">::</span>value<span class="op">,</span> _B1<span class="op">,</span> _B2<span class="op">&gt;::</span>type</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span> <span class="op">};</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>  <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> _B1<span class="op">,</span> <span class="kw">typename</span> _B2<span class="op">,</span> <span class="kw">typename</span> _B3<span class="op">,</span> <span class="kw">typename</span><span class="op">...</span> _Bn<span class="op">&gt;</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> __or_<span class="op">&lt;</span>_B1<span class="op">,</span> _B2<span class="op">,</span> _B3<span class="op">,</span> _Bn<span class="op">...&gt;</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">:</span> <span class="kw">public</span> conditional<span class="op">&lt;</span>_B1<span class="op">::</span>value<span class="op">,</span> _B1<span class="op">,</span> __or_<span class="op">&lt;</span>_B2<span class="op">,</span> _B3<span class="op">,</span> _Bn<span class="op">...&gt;&gt;::</span>type</span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span> <span class="op">};</span></span></code></pre></div>
+<p>这里细说<code>__or_</code>.</p>
+<h1 id="or_-1">__or_&lt;&gt;</h1>
+<p>当我们不给<code>__or_</code>传模板参数时,他就会直接继承一个<code>false_type</code>.</p>
+<p>也就是说以下代码:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>__or_<span class="op">&lt;&gt;</span> empty_or<span class="op">;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> empty_or<span class="op">.</span>value <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span></code></pre></div>
+<p>会输出<code>0</code>.</p>
+<h1 id="or__b1">__or_&lt;_B1&gt;</h1>
+<p>当<code>__or_</code>接受一个模板参数的时候,他直接继承这个这个参数.</p>
+<p>也就是如果这个参数继承了<code>true_type</code>,也就是<code>_B1::value</code>为<code>true</code>,那么<code>__or_</code>就会继承<code>_B1</code>,从而表现出<code>true_type</code>的特点.</p>
+<p>同理,如果这个参数继承了<code>false_type</code>,那么<code>__or_</code>表现出<code>false_type</code>的特点.</p>
+<p>这非常符合<code>or</code>的特征,当只接收一个布尔值时,计算结果就是这个布尔值.</p>
+<h1 id="or__b1-_b2">__or_&lt;_B1, _B2&gt;</h1>
+<p>如果<code>_B1::value</code>为<code>true</code>,那么<code>conditional&lt;_B1::value, _B1, _B2&gt;::type</code>将会返回<code>_B1</code>,<code>__or_</code>直接继承<code>_B1</code>,无视<code>_B2</code>.</p>
+<p>否则就继承<code>_B2</code>.</p>
+<p>继承<code>_B2</code>之后,<code>__or_</code>的<code>value</code>取决于<code>_B2::value</code>.</p>
+<p>这和<code>or</code>运算的表现一模一样.</p>
+<p>此外,<code>stl</code>的源码中还有<code>__and_</code>等等用于逻辑运算的模板类.实现方法也类似.</p>
+<p>到这里我们发现一个特点,模板元编程能够在编译期执行一些条件判断.</p>
+<p>他不能像指令式编程那样一条条语句往下写,反而很像函数式编程.</p>
+<p>可以通过上面的方法来组合各个类,编译器一顿推导之后,就会返回我们想要的值.</p>
+    </section>
+</article>
+
+        </main>
+
+        <footer>
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </footer>
+    </body>
+</html>

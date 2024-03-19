@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>理解stack_chk_guard - zzidun的博客</title>
+        <link rel="stylesheet" href="../css/default.css" />
+        <link rel="shortcut icon" href="../images/zzidun-logo.png" type="image/x-icon" />
+    </head>
+    <body>
+        <header>
+            <div class="logo">
+                <a href="../">zzidun的博客</a>
+            </div>
+            <nav>
+                <a href="../">主页</a>
+                <a href="../about.html">关于</a>
+                <a href="../contact.html">联系</a>
+                <a href="../archive.html">归档</a>
+            </nav>
+        </header>
+
+        <main role="main">
+            <h1>理解stack_chk_guard</h1>
+            <article>
+    <section class="header">
+        Posted on March  7, 2022
+        
+            by zzidun
+        
+    </section>
+    <section>
+        <h1 id="栈溢出攻击">栈溢出攻击</h1>
+<p>如果了解riscv的函数调用,会知道这样一件事:</p>
+<p>进入一个函数之后,程序会把返回地址和原本的<code>s0</code>寄存器的值,存到栈的开头.</p>
+<p>就像这样</p>
+<table>
+<thead>
+<tr class="header">
+<th>地址</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>[sp+24, sp+32)</code></td>
+<td>返回地址寄存器<code>ra</code>的值</td>
+</tr>
+<tr class="even">
+<td><code>[sp+16, sp+24)</code></td>
+<td>进入函数之前,寄存器<code>s0</code>的值</td>
+</tr>
+<tr class="odd">
+<td><code>[sp,sp+16)</code></td>
+<td>其他内容</td>
+</tr>
+</tbody>
+</table>
+<p>着看起来没啥毛病,但是黑客不这么认为.</p>
+<p>如果这个函数有一个读取输入的语句,并且可以输入很长的内容.</p>
+<p>比如你让用户输入一个字符串,并存到栈上,但是没有对字符串的长度做限制.</p>
+<p>那么输入的字符串就会把栈前面的数据也覆盖掉.</p>
+<p>这时候攻击者可以输入一个超长的字符串,覆盖掉栈上记录的返回地址.</p>
+<p>从而使函数返回时,跳转到攻击者想要的位置.</p>
+<h1 id="stack_chk_guard的用处">__stack_chk_guard的用处</h1>
+<p>如果我们在一个函数获取输入,并且存到一个局部变量中.</p>
+<p>那么编译器除了会生成功能相关的代码之外,还会一些额外的代码,对一个叫做<code>__stack_chk_guard</code>的符号进行操作.</p>
+<p>例如以下代码</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">()</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> a <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    scanf<span class="op">(</span><span class="st">&quot;</span><span class="sc">%d</span><span class="st">&quot;</span><span class="op">,</span> <span class="op">&amp;</span>a<span class="op">);</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>如果我们使用<code>riscv64-linux-gnu-g++</code>编译,会产生以下汇编代码(节选)</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>main<span class="op">:</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>	addi	sp<span class="op">,</span>sp<span class="op">,-</span><span class="dv">32</span> <span class="er"># 栈顶指针-32</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>	sd	ra<span class="op">,</span><span class="dv">24</span><span class="op">(</span>sp<span class="op">)</span> <span class="er"># ra存到sp+24</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>	sd	s0<span class="op">,</span><span class="dv">16</span><span class="op">(</span>sp<span class="op">)</span> <span class="er"># s0存到sp+16</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>	addi	s0<span class="op">,</span>sp<span class="op">,</span><span class="dv">32</span> <span class="er"># 计算新的栈底地址,s0=sp+32</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>	la	a5<span class="op">,</span>__stack_chk_guard <span class="er"># 加载__stack_chk_guard的地址到寄存器a5</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>	ld	a5<span class="op">,</span><span class="dv">0</span><span class="op">(</span>a5<span class="op">)</span> <span class="er"># 加载寄存器a5中所存的地址指向的内容到寄存器a5</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>	sd	a5<span class="op">,-</span><span class="dv">24</span><span class="op">(</span>s0<span class="op">)</span> <span class="er"># 把寄存器a5中的内容存到s0-24(也就是sp+8)</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>	sw	zero<span class="op">,-</span><span class="dv">28</span><span class="op">(</span>s0<span class="op">)</span> <span class="er"># 下面是输入的操作,不再多说</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>	addi	a5<span class="op">,</span>s0<span class="op">,-</span><span class="dv">28</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>	mv	a1<span class="op">,</span>a5</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>	lla	a0<span class="op">,.</span>LC0</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>	call	__isoc99_scanf<span class="er">@</span>plt</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>	li	a5<span class="op">,</span><span class="dv">0</span> <span class="er"># 把返回值传到寄存器a3中</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>	mv	a3<span class="op">,</span>a5</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>	la	a5<span class="op">,</span>__stack_chk_guard <span class="er"># 再次加载__stack_chk_guard的地址到寄存器a5</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>	ld	a4<span class="op">,-</span><span class="dv">24</span><span class="op">(</span>s0<span class="op">)</span> <span class="er"># 把之前存到sp+8的内容拿出来,放到寄存器a4</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>	ld	a5<span class="op">,</span><span class="dv">0</span><span class="op">(</span>a5<span class="op">)</span> <span class="er"># 加载寄存器a5中所存的地址指向的内容到寄存器a5</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>	beq	a4<span class="op">,</span>a5<span class="op">,.</span>L3 <span class="er"># 对比寄存器a4,a5的内容,如果相同就跳转到.L3</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>	call	__stack_chk_fail<span class="er">@</span>plt <span class="er"># 否则报错</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="op">.</span>L3</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>	mv	a0<span class="op">,</span>a3 <span class="er"># 返回值传到寄存器a0</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>	ld	ra<span class="op">,</span><span class="dv">24</span><span class="op">(</span>sp<span class="op">)</span> <span class="er"># 取出之前的ra</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>	ld	s0<span class="op">,</span><span class="dv">16</span><span class="op">(</span>sp<span class="op">)</span> <span class="er"># 取出之前的s0</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>	addi	sp<span class="op">,</span>sp<span class="op">,</span><span class="dv">32</span> <span class="er"># sp恢复到-32前</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>	jr	ra <span class="er"># 跳转到返回地址ra</span></span></code></pre></div>
+<p>很显然,这个栈的布局是这样的</p>
+<table>
+<thead>
+<tr class="header">
+<th>地址</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>[sp+24, sp+32)</code></td>
+<td>返回地址寄存器<code>ra</code>的值</td>
+</tr>
+<tr class="even">
+<td><code>[sp+16, sp+24)</code></td>
+<td>进入函数之前,寄存器<code>s0</code>的值</td>
+</tr>
+<tr class="odd">
+<td><code>[sp+8,sp+16)</code></td>
+<td><code>__stack_chk_guard</code></td>
+</tr>
+<tr class="even">
+<td><code>[sp+4,sp+8)</code></td>
+<td>栈上定义的变量</td>
+</tr>
+</tbody>
+</table>
+<p>另外多出一点,因为需要对齐.</p>
+<p>我们在进入函数之前把一个数值<code>__stack_chk_guard</code>存到了栈上定义的变量之前.</p>
+<p>在返回前,又把之前存的数值拿出来,和原本的<code>__stack_chk_guard</code>进行对比.</p>
+<p>如果没有发生变化,就说明输入的时候没有没有影响到<code>sp+8</code>之前的值.</p>
+<p>因为输入操作的影响通常是连续的,我们可以认为只要<code>sp+8</code>没有变化,前面的值就没有被影响.</p>
+<p>因为<code>__stack_chk_guard</code>是一个随机值,攻击者应该无法将一模一样的值写回去.</p>
+<p>这时候可以认为返回地址是安全的.</p>
+    </section>
+</article>
+
+        </main>
+
+        <footer>
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </footer>
+    </body>
+</html>
