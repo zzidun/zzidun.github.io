@@ -2,7 +2,7 @@
 title: windows系统镜像磁力链接
 author: zzidun
 date: 2022-02-14
-category: 资源分享
+tags: 资源分享
 ---
 
 这是我从网络上收集的一些系统镜像下载链接.

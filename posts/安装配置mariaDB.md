@@ -2,7 +2,7 @@
 title: 安装配置mariaDB
 author: zzidun
 date: 2021-12-25
-category: 软件技巧
+tags: 软件技巧
 ---
 
 # 安装

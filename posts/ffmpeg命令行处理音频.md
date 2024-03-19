@@ -2,7 +2,7 @@
 title: ffmpeg命令行处理音频
 author: zzidun
 date: 2021-12-27
-category: 软件技巧
+tags: 软件技巧
 ---
 
 ## 1. 获取视频

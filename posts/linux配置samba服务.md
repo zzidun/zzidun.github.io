@@ -2,7 +2,7 @@
 title: linux配置samba服务
 author: zzidun
 date: 2022-01-27
-category: 软件技巧
+tags: 软件技巧
 ---
 
 # 安装samba

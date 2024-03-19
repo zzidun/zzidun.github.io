@@ -2,7 +2,7 @@
 title: 理解stack_chk_guard
 author: zzidun
 date: 2022-03-07
-category: 编程学习
+tags: 编程学习
 ---
 
 # 栈溢出攻击

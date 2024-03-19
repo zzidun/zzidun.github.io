@@ -2,7 +2,7 @@
 title: linux桌面使用中那些事
 author: zzidun
 date: 2021-12-28
-category: 软件技巧
+tags: 软件技巧
 ---
 
 # 使用光驱刻录光盘
