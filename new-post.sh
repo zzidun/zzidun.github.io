@@ -1,5 +1,4 @@
-mkdir posts/$2
-touch posts/$2/$1.md -r
+touch posts/$1.md -r
 current_date=`date +'%Y-%m-%d'`
 
 echo "---" >> posts/$1.md

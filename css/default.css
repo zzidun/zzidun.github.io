@@ -1,8 +1,14 @@
+@font-face {
+    font-family: 'Fira Mono';
+    src: url('/fonts/FiraMono-Regular.woff2') format('woff2'),
+}
+
 html {
   font-size: 62.5%;
 }
 
 body {
+  font-family: 'Fira Mono';
   font-size: 1.6rem;
   color: #000;
 }
@@ -40,15 +46,14 @@ h2 {
 }
 
 pre {
-  font-size: 0.9em;
+  font-size: 1.5rem;
   background-color: #FAFAFA;
   border: 1px solid #C8C8C8;
-/*   white-space: pre-wrap; */
   overflow-x:auto;
 }
 
 p code {
-  font-size: 0.9em;
+  font-size: 1.5rem;
   background-color: #FAFAFA;
   border: 1px solid #C8C8C8;
 }
