@@ -24,7 +24,7 @@ main = do
             route   idRoute
             compile compressCssCompiler
 
-        match (fromList ["about.markdown", "contact.markdown"]) $ do
+        match (fromList ["links.md", "contact.md"]) $ do
             route   $ setExtension "html"
             compile $ pandocCompiler
                 >>= loadAndApplyTemplate "templates/default.html" defaultContext
