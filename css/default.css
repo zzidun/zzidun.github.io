@@ -51,6 +51,14 @@ article .header {
   color: #555;
 }
 
+a:link {
+  color:#EE0000
+}
+
+a:visited {
+  color:#880000
+}
+
 .logo a {
   font-weight: bold;
   color: #000;
