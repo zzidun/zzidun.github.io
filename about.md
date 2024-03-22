@@ -4,6 +4,8 @@ title: 我的详情
 
 一个还没找到真理的斗士.
 
+stay angry, stay cào.
+
 联系方式: zzidun@posteo.com (你该不会想用微信吧
 
 # 修炼进度
