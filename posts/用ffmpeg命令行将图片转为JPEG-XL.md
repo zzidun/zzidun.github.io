@@ -1,28 +1,21 @@
 ---
-title: 如何启用网页上的JPEG XL图片
+title: 用ffmpeg命令行将图片转为JPEG XL
 author: zzidun
 date: 2024-03-22
 tags: 软件技巧
 ---
 
-# Firefox
+多的就不说了, 直接上命令:
 
-1. 在firefox地址栏输入`about:config`, 进入配置页面.
+```
+ffmpeg -i input.jpg output.jxl
+```
 
-2. 选择`接受风险并继续`.
+还可以设置转换的质量(下面那个`90`就是保留百分之多少画质的意思)
 
-3. 搜索`image.jxl.enabled`, 点击这一行最右边的箭头把值改为`true`.
-
-# Chrome系
-
-不支持.
-
-注意是chrome系浏览器主动不支持jpeg xl格式, 而不是jpeg xl对chrome做了什么.
-
-# Safari
-
-Safari默认就是支持的.
-
+```
+ffmpeg -i input.jpg -q:v 90 output.jxl
+```
 
 # jpeg xl介绍
 
@@ -53,6 +46,8 @@ google见自己想要推广的avif和webp2好像无法压过jxl,
 便声称"jxl不是生态环境想要的", 并移除了chrome对于jxl的支持.
 
 打不过就封锁, 这就是google.
+
+但是, 将军勿虑, 请看此文[在Firefox和Safari使用jxl](/posts/如何启用网页上的JPEG-XL图片.html)
 
 ## 但是, 我支持jxl
 

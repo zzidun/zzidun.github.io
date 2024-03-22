@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta http-equiv="x-ua-compatible" content="ie=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>如何启用网页上的JPEG XL图片 - zzidun的博客</title>
+        <title>用ffmpeg命令行将图片转为JPEG XL - zzidun的博客</title>
         <link rel="stylesheet" href="../css/fira-mono.css" />
         <link rel="stylesheet" href="../css/default.css" />
         <link rel="stylesheet" href="../css/syntax.css" />
@@ -24,7 +24,7 @@
         </header>
 
         <main role="main">
-            <h1>如何启用网页上的JPEG XL图片</h1>
+            <h1>用ffmpeg命令行将图片转为JPEG XL</h1>
             <article>
     <section class="header">
         Posted on March 22, 2024
@@ -38,17 +38,10 @@
     </p>
     </section>
     <section>
-        <h1 id="firefox">Firefox</h1>
-<ol type="1">
-<li><p>在firefox地址栏输入<code>about:config</code>, 进入配置页面.</p></li>
-<li><p>选择<code>接受风险并继续</code>.</p></li>
-<li><p>搜索<code>image.jxl.enabled</code>, 点击这一行最右边的箭头把值改为<code>true</code>.</p></li>
-</ol>
-<h1 id="chrome系">Chrome系</h1>
-<p>不支持.</p>
-<p>注意是chrome系浏览器主动不支持jpeg xl格式, 而不是jpeg xl对chrome做了什么.</p>
-<h1 id="safari">Safari</h1>
-<p>Safari默认就是支持的.</p>
+        <p>多的就不说了, 直接上命令:</p>
+<pre><code>ffmpeg -i input.jpg output.jxl</code></pre>
+<p>还可以设置转换的质量(下面那个<code>90</code>就是保留百分之多少画质的意思)</p>
+<pre><code>ffmpeg -i input.jpg -q:v 90 output.jxl</code></pre>
 <h1 id="jpeg-xl介绍">jpeg xl介绍</h1>
 <p>JPEG XL 是一种自由的图像文件格式, 支持有损和无损压缩(下面简称jxl).</p>
 <p>他在保留高画质的情况下, 能够把文件压缩得比jpeg还小.</p>
@@ -64,6 +57,7 @@
 <p>google见自己想要推广的avif和webp2好像无法压过jxl,</p>
 <p>便声称”jxl不是生态环境想要的”, 并移除了chrome对于jxl的支持.</p>
 <p>打不过就封锁, 这就是google.</p>
+<p>但是, 将军勿虑, 请看此文<a href="../posts/如何启用网页上的JPEG-XL图片.html">在Firefox和Safari使用jxl</a></p>
 <h2 id="但是-我支持jxl">但是, 我支持jxl</h2>
 <p>所以, 本博客的所有无需无损显示的图片都会使用jxl格式.</p>
     </section>
