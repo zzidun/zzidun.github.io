@@ -8,40 +8,14 @@ stay angry, stay cào.
 
 联系方式: zzidun@posteo.com (你该不会想用微信吧
 
-# 修炼进度
-
 ```
-		C艹
-------------------------------------------
-||||||||||||||||||||||||70|              |
-------------------------------------------
-	       Haskell
-------------------------------------------
-||10|                                    |
-------------------------------------------
-	    桌面客户端
-------------------------------------------
-||||||||||||||||||||||||||||||||85|      |
-------------------------------------------
-               前端
-------------------------------------------
-|||||20|                                 |
-------------------------------------------
-               嵌入式
-------------------------------------------
-||10|                                    |
-------------------------------------------
-	       图形学
-------------------------------------------
-||10|                                    |
-------------------------------------------
+let 喜欢吃的东西 = [数据结构, 图论, 组合数学, 类型论, 纯函数式]
+let 不喜欢吃的东西 = [面向对象, 设计模式, 动态类型, 语法糖]
 ```
 
-我永远喜欢:
-
-<img src="/images/haskell.jpg" alt="haskell" style="height:12rem; width:12rem "/>
-<img src="/images/firefox.jpg" alt="firefox" style="height:12rem; width:12rem "/>
-<img src="/images/thunderbird.jpg" alt="thunderbird" style="height:12rem; width:12rem "/>
-<img src="/images/kde.jpg" alt="kde" style="height:12rem; width:12rem "/>
-<img src="/images/kate.jpg" alt="kate" style="height:12rem; width:12rem "/>
-<img src="/images/archlinux.jpg" alt="archlinux" style="height:12rem; width:12rem "/>
+<img src="/images/haskell.jpg" alt="haskell" style="height:6rem; width:6rem "/>
+<img src="/images/firefox.jpg" alt="firefox" style="height:6rem; width:6rem "/>
+<img src="/images/thunderbird.jpg" alt="thunderbird" style="height:6rem; width:6rem "/>
+<img src="/images/kde.jpg" alt="kde" style="height:6rem; width:6rem "/>
+<img src="/images/kate.jpg" alt="kate" style="height:6rem; width:6rem "/>
+<img src="/images/archlinux.jpg" alt="archlinux" style="height:6rem; width:6rem "/>
