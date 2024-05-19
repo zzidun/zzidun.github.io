@@ -1,16 +1,16 @@
 ---
-title: 友情链接
+title: 推荐阅读
 ---
 
 凡是对我有过帮助的网站都会放在这里的
 
-# 查询类
+# 工具网站
 
 [OEIS:在线整数数列数据库](https://oeis.org/)
 
 [C++ draft:C艹最新草案](http://eel.is/c++draft/)
 
-# 博客类
+# 个人博客
 
 [Sunic Yosen的博客](https://sunicyosen.github.io/)
 
@@ -21,3 +21,7 @@ title: 友情链接
 [21技术](https://www.21xrx.com/)
 
 [Moonvy月球背面](https://moonvy.com/blog/)
+
+# 收藏文章
+
+[自制DIY家庭网络服务器机柜](https://blog.qiaohewei.cc/2023/06/14/diy-home-server-cloud-center/)
