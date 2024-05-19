@@ -2,8 +2,6 @@
 title: 推荐阅读
 ---
 
-凡是对我有过帮助的网站都会放在这里的
-
 # 工具网站
 
 [OEIS:在线整数数列数据库](https://oeis.org/)
@@ -22,6 +20,6 @@ title: 推荐阅读
 
 [Moonvy月球背面](https://moonvy.com/blog/)
 
-# 收藏文章
+# 有趣的文章
 
 [自制DIY家庭网络服务器机柜](https://blog.qiaohewei.cc/2023/06/14/diy-home-server-cloud-center/)
