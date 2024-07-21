@@ -1,4 +1,3 @@
-touch posts/$1.md -r
 current_date=`date +'%Y-%m-%d'`
 
 echo "---" >> posts/$1.md
