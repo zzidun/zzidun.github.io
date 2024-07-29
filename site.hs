@@ -19,6 +19,9 @@ main = do
         match "woff2/*" $ do
             route   idRoute
             compile copyFileCompiler
+        match "CNAME" $ do
+            route   idRoute
+            compile copyFileCompiler
 
         match "css/*" $ do
             route   idRoute
@@ -31,6 +34,14 @@ main = do
                 >>= relativizeUrls
 
         tags <- buildTags "posts/*" (fromCapture "tags/*.html")
+
+        match "posts/*" $ do
+            route $ setExtension "html"
+            compile $ pandocCompiler
+                >>= loadAndApplyTemplate "templates/post.html"    (postCtxWithTags tags)
+                >>= loadAndApplyTemplate "templates/default.html" (postCtxWithTags tags)
+                >>= relativizeUrls
+
         tagsRules tags $ \tag pattern -> do
             let title = "Posts tagged \"" ++ tag ++ "\""
             route idRoute
@@ -45,12 +56,6 @@ main = do
                     >>= loadAndApplyTemplate "templates/default.html" ctx
                     >>= relativizeUrls
 
-        match "posts/*" $ do
-            route $ setExtension "html"
-            compile $ pandocCompiler
-                >>= loadAndApplyTemplate "templates/post.html"    (postCtxWithTags tags)
-                >>= loadAndApplyTemplate "templates/default.html" (postCtxWithTags tags)
-                >>= relativizeUrls
 
         create ["archive.html"] $ do
             route idRoute
@@ -78,6 +83,17 @@ main = do
                     >>= applyAsTemplate indexCtx
                     >>= loadAndApplyTemplate "templates/default.html" indexCtx
                     >>= relativizeUrls
+
+        create ["sitemap.xml"] $ do
+            route   idRoute
+            compile $ do
+                posts <- recentFirst =<< loadAll "posts/*"
+                let sitemapCtx =
+                        listField "entries" postCtx (return posts) `mappend`
+                        defaultContext
+                makeItem ""
+                    >>= loadAndApplyTemplate "templates/sitemap.xml" sitemapCtx
+
 
         match "templates/*" $ compile templateBodyCompiler
 
