@@ -55,25 +55,25 @@
 <p>也就是有这样的关系(假设<code>fun1</code>的栈底指针是<code>x</code>):</p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>地址</th>
 <th>含义</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>x</code></td>
 <td><code>fun1</code>的栈底指针</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>x-fun1的栈大小</code></td>
 <td><code>fun1</code>的栈顶指针</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>x-fun1的栈大小</code></td>
 <td><code>fun2</code>的栈底指针</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>x-(fun1的栈大小+fun2的栈大小)</code></td>
 <td><code>fun2</code>的栈顶指针</td>
 </tr>
@@ -107,17 +107,17 @@
 <col style="width: 50%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>地址区间</th>
 <th>内容</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>[栈底指针-x, 栈底指针)</code></td>
 <td>函数中所有的局部变量(不包含变长数组)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>[栈底指针-(x+y), 栈底指针-x)</code></td>
 <td>函数中的局部变长数组(此时的地址区间<code>[栈顶指针,栈顶指针+元素大小)</code>是第0个元素的位置)</td>
 </tr>
@@ -282,21 +282,21 @@
 <p>目前栈上的内存如下:</p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>位置</th>
 <th>内容</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>[s0-8,s0)</code></td>
 <td>返回地址</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>[s0-16, s0-8)</code></td>
 <td>上一级函数的栈底指针</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>[sp, s0-16)</code></td>
 <td>未使用</td>
 </tr>
@@ -310,25 +310,25 @@
 <p>目前栈上的内容如下:</p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>位置</th>
 <th>内容</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>[s0-8,s0)</code></td>
 <td>返回地址</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>[s0-16, s0-8)</code></td>
 <td>上一级函数的栈底指针</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>[s0-24, s0-16)</code></td>
 <td>栈溢出标记</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>[sp, s0-24)</code></td>
 <td>未使用</td>
 </tr>
@@ -347,29 +347,29 @@
 <p>目前栈上的内容如下:</p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>位置</th>
 <th>内容</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>[s0-8,s0)</code></td>
 <td>返回地址</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>[s0-16, s0-8)</code></td>
 <td>上一级函数的栈底指针</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>[s0-24, s0-16)</code></td>
 <td>栈溢出标记</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>[sp+数组大小, s0-24)</code></td>
 <td>未使用</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>[sp, sp+数组大小)</code></td>
 <td>变长数组</td>
 </tr>

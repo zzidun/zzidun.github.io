@@ -121,29 +121,29 @@ int some_value[get_five() + 7];</code></pre>
 <p>这里我们细说<code>true_type</code>,他的表现如下</p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>用法</th>
 <th>效果</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>true_type().value</code></td>
 <td>值<code>true</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>true_type::value_type</code></td>
 <td>类型<code>bool</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>type</code></td>
 <td>类型<code>integral_constant&lt;bool, true&gt;</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>bool(true_type())</code></td>
 <td>值<code>true</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>true_type()()</code></td>
 <td>值<code>true</code></td>
 </tr>

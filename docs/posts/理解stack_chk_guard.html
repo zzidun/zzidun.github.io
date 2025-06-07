@@ -45,21 +45,21 @@
 <p>就像这样</p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>地址</th>
 <th>内容</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>[sp+24, sp+32)</code></td>
 <td>返回地址寄存器<code>ra</code>的值</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>[sp+16, sp+24)</code></td>
 <td>进入函数之前,寄存器<code>s0</code>的值</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>[sp,sp+16)</code></td>
 <td>其他内容</td>
 </tr>
@@ -113,25 +113,25 @@
 <p>很显然,这个栈的布局是这样的</p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>地址</th>
 <th>内容</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>[sp+24, sp+32)</code></td>
 <td>返回地址寄存器<code>ra</code>的值</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>[sp+16, sp+24)</code></td>
 <td>进入函数之前,寄存器<code>s0</code>的值</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>[sp+8,sp+16)</code></td>
 <td><code>__stack_chk_guard</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>[sp+4,sp+8)</code></td>
 <td>栈上定义的变量</td>
 </tr>
