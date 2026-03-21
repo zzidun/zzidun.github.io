@@ -23,7 +23,8 @@
      (body
       (header
        (div (@ (class "logo"))
-        (a (@ (href "/")) ,(site-title site)))
+        (a (@ (href "/")) ,(site-title site))
+      )
        (nav
         (a (@ (href "/")) "主页")
         (a (@ (href "/links.html")) "推荐阅读")

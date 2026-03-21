@@ -21,10 +21,6 @@
     (br)
     "邮箱: zzidun@posteo.com"
     (br)
-    (p
-     (img (@ (src "/assets/images/firefox.jpg") (style "height:2rem; width:2rem;")))
-     "本站将永远适配Firefox, 狐门"
-     (img (@ (src "/assets/images/firefox.jpg") (style "height:2rem; width:2rem;"))))
     (h2 "近期文章:")
     ,@(let ((recent (take (posts/reverse-chronological posts) (min 5 (length posts)))))
         (map (lambda (post)
@@ -33,7 +29,22 @@
                       " — "
                       ,(date->string* (post-date post)))))
              recent))
-    (p "…更多内容, 见此 " (a (@ (href "/archive.html")) "归档") ".")))
+    (p "…更多内容, 见此 " (a (@ (href "/archive.html")) "归档") ".")
+    (script (@ (src "https://giscus.app/client.js")
+               (data-repo "zzidun/zzidun.github.io")
+               (data-repo-id "R_kgDOGlKwHw")
+               (data-category "Announcements")
+               (data-category-id "DIC_kwDOGlKwH84C46jQ")
+               (data-mapping "title")
+               (data-strict "0")
+               (data-reactions-enabled "1")
+               (data-emit-metadata "0")
+               (data-input-position "bottom")
+               (data-theme "light_high_contrast")
+               (data-lang "zh-CN")
+               (crossorigin "anonymous")
+               (async "async"))
+             "")))
 
 (define (index-page-builder layout)
   (lambda (site posts)
