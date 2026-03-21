@@ -33,15 +33,15 @@
       #:default-metadata
       '((author . "zzidun")
         (email  . "zzidun@posteo.com"))
-      #:posts-directory ".."
-      #:build-directory "site"
+      #:posts-directory "../posts"
+      #:build-directory "../docs"
       #:file-filter post-file?
       #:readers (list skribe-reader commonmark-reader)
       #:builders (list (blog #:theme zzidun-theme)
                        (atom-feed)
                        (atom-feeds-by-tag)
                        (my-static-directory "assets" "assets")
-                       (my-static-directory "../resource" "resource")
+                       (my-static-directory "../posts/resource" "resource")
                        (index-page-builder zzidun-layout)
                        (links-page-builder zzidun-layout)
                        (archive-page-builder zzidun-layout)
