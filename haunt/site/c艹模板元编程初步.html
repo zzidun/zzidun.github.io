@@ -1,0 +1,77 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>C艹模板元编程初步 — zzidun的博客</title><link rel="stylesheet" href="/assets/css/fira-mono.css" /><link rel="stylesheet" href="/assets/css/default.css" /><link rel="stylesheet" href="/assets/css/syntax.css" /><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" /><link rel="shortcut icon" href="/assets/images/zzidun-logo.png" type="image/x-icon" /><script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/haskell.min.js"></script><script>hljs.highlightAll();</script></head><body><header><div class="logo"><a href="/">zzidun的博客</a></div><nav><a href="/">主页</a><a href="/links.html">推荐阅读</a><a href="/archive.html">归档</a></nav></header><main role="main"><h1>C艹模板元编程初步</h1><p style="font-size: 0.9em; color: #666;">作者: zzidun  |  时间: 2022年01月22日 00:00:00  |  标签: <a href="/tags/编程学习.html">编程学习</a></p><div><h1>integral_constant</h1><pre><code class="language-cpp">template&lt;typename _Tp, _Tp __v&gt;
+struct integral_constant
+{
+    static constexpr _Tp                  value = __v;
+    typedef _Tp                           value_type;
+    typedef integral_constant&lt;_Tp, __v&gt;   type;
+    constexpr operator value_type() const noexcept { return value; }
+#if __cplusplus &gt; 201103L
+
+#define __cpp_lib_integral_constant_callable 201304
+
+    constexpr value_type operator()() const noexcept { return value; }
+#endif
+};</code></pre><h1>constexpr</h1><p>在编译期需要用到的值,必须能够在编译期确定.</p><p>如果像是这样:</p><pre><code class="language-cpp">int get_five() {return 5;}
+
+int some_value[get_five() + 7];</code></pre><p>因为<code>fet_five()+7</code>是一个需要在运行时才能确定的值.</p><p>而<code>somve_value</code>的大小必须要在编译期确定,所以以上代码会报错.</p><p><code>C++11</code>有了<code>constexpr</code>.</p><p>可以如果函数符合某些条件,以至于能够在编译期就确定他的返回值,那么加上<code>constexpr</code>能够在编译期使用这个函数的返回值.</p><p>就像上面的代码可以改为</p><pre><code class="language-shell">constexpr int get_five() {return 5;}
+
+int some_value[get_five() + 7];</code></pre><h1>__cpp_lib_integral_constant_callable</h1><p>这个宏表示这个函数重载了<code>operator()</code>,至于为什么要把<code>operator()</code>写在<code>#if __cplusplus &gt; 201103L</code>里面,我暂时不清楚.</p><h1>成员</h1><p>结构体定义了类型为<code>_Tp</code>的成员<code>value</code>,值为<code>__v</code>.</p><p>并且把<code>_Tp</code>定义为<code>value_type</code>,把这个结构体本身定义为<code>type</code>.</p><p>这些成员都是可以在编译期确定了,也就是可以写一个这样的代码:</p><pre><code class="language-cpp">std::integral_constant&lt;bool, true&gt;::value_type the_bool
+  = std::integral_constant&lt;bool, true&gt;::value;</code></pre><p>这个代码虽然没啥卵用,但是这个用法是很有用的.</p><h1>operator value_type()</h1><p>这个函数的作用是:当把这个结构体转成<code>value_type</code>类型时,实际上会返回这个函数的返回值.</p><p>类似的用法如下:</p><pre><code class="language-cpp">struct sample{
+    constexpr operator double() const noexcept { return 1.0；}
+    constexpr operator float() const noexcept { return 2.0; }
+};
+
+int main()
+{
+    sample the_sample;
+    std::cout &lt;&lt; float(the_sample) &lt;&lt; std::endl;
+    std::cout &lt;&lt; double(the_sample) &lt;&lt; std::endl;
+    return 0;
+}
+</code></pre><h1>value_type operator()()</h1><p>如果有一个类实现了<code>operator()()</code>,我们可以将这个类实例化的对象当成一个函数来用.</p><p>把这个对象当成函数来使用时,他就会执行函数<code>operator()()</code>.</p><p>例如这样:</p><pre><code class="language-cpp">struct sample {
+    constexpr int operator()() const noexcept { return 0; }
+    constexpr int operator()(int a) const noexcept { return 1; }
+    constexpr int operator()(int a, int b) const noexcept { return 2; }
+};
+
+int main()
+{
+    sample the_sample;
+    std::cout &lt;&lt; the_sample() &lt;&lt; std::endl;
+    std::cout &lt;&lt; the_sample(1) &lt;&lt; std::endl;
+    std::cout &lt;&lt; the_sample(1,2) &lt;&lt; std::endl;
+    return 0;
+}</code></pre><p>知道这几个特性之后,这个结构体的作用就非常明显了.</p><h1>true_type和false_type</h1><pre><code class="language-cpp">/// The type used as a compile-time boolean with true value.
+typedef integral_constant&lt;bool, true&gt;     true_type;
+
+/// The type used as a compile-time boolean with false value.
+typedef integral_constant&lt;bool, false&gt;    false_type;</code></pre><p>C++预先定义了这两个结构体,其他很多地方用到.</p><p>这里我们细说<code>true_type</code>,他的表现如下</p><ul><li><code>true_type().value</code>: 值<code>true</code></li><li><code>true_type::value_type</code>: 类型<code>bool</code></li><li><code>type</code>: 类型<code>integral_constant&lt;bool, true&gt;</code></li><li><code>bool(true_type())</code>: 值<code>true</code></li><li><code>true_type()()</code>: 值<code>true</code></li></ul><p>再次强调,这里几个成员,要不就是<code>constexpr</code>变量和函数,要不就是<code>typedef</code>定义的类型.他们都可以在编译期确定.</p><h1>conditional</h1><pre><code class="language-cpp">template&lt;bool _Cond, typename _Iftrue, typename _Iffalse&gt;
+    struct conditional
+    { typedef _Iftrue type; };
+
+// Partial specialization for false.
+template&lt;typename _Iftrue, typename _Iffalse&gt;
+    struct conditional&lt;false, _Iftrue, _Iffalse&gt;
+    { typedef _Iffalse type; };</code></pre><p>以上代码根据<code>bool _Cond</code>的值,来决定<code>conditional::type</code>.</p><p>先定义一个模板类,无论如何都把<code>type</code>定义为<code>_Iftrue</code>.</p><p>然后特化这个模板,当<code>_Cond</code>传入<code>false</code>的时候,把<code>type</code>定义为<code>_Iffalse</code>.</p><p>上述的<code>conditonal</code>的第一个模板参数<code>_Cond</code>其实很有说法.</p><p>如果我们直接传布尔值,或者传一个很简单的表达式,那就浪费了.</p><p>因此,C++定义了<code>__or_</code>, <code>__and_</code>等等结构体,来实现复杂的判断.</p><h1>__or_</h1><pre><code class="language-cpp">  template&lt;typename...&gt;
+    struct __or_;
+
+  template&lt;&gt;
+    struct __or_&lt;&gt;
+    : public false_type
+    { };
+
+  template&lt;typename _B1&gt;
+    struct __or_&lt;_B1&gt;
+    : public _B1
+    { };
+
+  template&lt;typename _B1, typename _B2&gt;
+    struct __or_&lt;_B1, _B2&gt;
+    : public conditional&lt;_B1::value, _B1, _B2&gt;::type
+    { };
+
+  template&lt;typename _B1, typename _B2, typename _B3, typename... _Bn&gt;
+    struct __or_&lt;_B1, _B2, _B3, _Bn...&gt;
+    : public conditional&lt;_B1::value, _B1, __or_&lt;_B2, _B3, _Bn...&gt;&gt;::type
+    { };</code></pre><p>这里细说<code>__or_</code>.</p><h1>__or_&lt;&gt;</h1><p>当我们不给<code>__or_</code>传模板参数时,他就会直接继承一个<code>false_type</code>.</p><p>也就是说以下代码:</p><pre><code class="language-cpp">    std::__or_&lt;&gt; empty_or;
+    std::cout &lt;&lt; empty_or.value &lt;&lt; std::endl;</code></pre><p>会输出<code>0</code>.</p><h1>__or_&lt;_B1&gt;</h1><p>当<code>__or_</code>接受一个模板参数的时候,他直接继承这个这个参数.</p><p>也就是如果这个参数继承了<code>true_type</code>,也就是<code>_B1::value</code>为<code>true</code>,那么<code>__or_</code>就会继承<code>_B1</code>,从而表现出<code>true_type</code>的特点.</p><p>同理,如果这个参数继承了<code>false_type</code>,那么<code>__or_</code>表现出<code>false_type</code>的特点.</p><p>这非常符合<code>or</code>的特征,当只接收一个布尔值时,计算结果就是这个布尔值.</p><h1>__or_&lt;_B1, _B2&gt;</h1><p>如果<code>_B1::value</code>为<code>true</code>,那么<code>conditional&lt;_B1::value, _B1, _B2&gt;::type</code>将会返回<code>_B1</code>,<code>__or_</code>直接继承<code>_B1</code>,无视<code>_B2</code>.</p><p>否则就继承<code>_B2</code>.</p><p>继承<code>_B2</code>之后,<code>__or_</code>的<code>value</code>取决于<code>_B2::value</code>.</p><p>这和<code>or</code>运算的表现一模一样.</p><p>此外,<code>stl</code>的源码中还有<code>__and_</code>等等用于逻辑运算的模板类.实现方法也类似.</p><p>到这里我们发现一个特点,模板元编程能够在编译期执行一些条件判断.</p><p>他不能像指令式编程那样一条条语句往下写,反而很像函数式编程.</p><p>可以通过上面的方法来组合各个类,编译器一顿推导之后,就会返回我们想要的值.</p></div></main><footer>Site generated by <a href="https://dthompson.us/projects/haunt.html">Haunt</a></footer></body></html>

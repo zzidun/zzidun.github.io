@@ -1,0 +1,47 @@
+(define-module (pages archive)
+  #:use-module (haunt site)
+  #:use-module (haunt post)
+  #:use-module (haunt artifact)
+  #:use-module (haunt html)
+  #:use-module (srfi srfi-1)
+  #:use-module (srfi srfi-19)
+  #:export (archive-page-builder))
+
+(define (date->string* date)
+  (date->string date "~Y年~m月~d日"))
+
+(define (archive-content site posts)
+  (define sorted-posts (posts/reverse-chronological posts))
+  (define all-tags (delete-duplicates (apply append (map post-tags posts))))
+  (define (post-uri post)
+    (string-append "/" (site-post-slug site post) ".html"))
+  (define (tag-uri tag)
+    (string-append "/tags/" tag ".html"))
+  (define (tag-links tags)
+    (if (null? tags)
+        '()
+        (let loop ((tags tags) (result '()))
+          (cond
+           ((null? tags) (reverse result))
+           ((null? (cdr tags)) (reverse (cons `(a (@ (href ,(tag-uri (car tags)))) ,(car tags)) result)))
+           (else (loop (cdr tags) (cons " · " (cons `(a (@ (href ,(tag-uri (car tags)))) ,(car tags)) result))))))))
+  `((h1 "归档")
+    (p "共 " ,(number->string (length posts)) " 篇文章")
+    (h2 "标签")
+    (p (@ (style "line-height: 2;"))
+       ,@(tag-links all-tags))
+    (h2 "文章列表")
+    (ul
+     ,@(map (lambda (post)
+              `(li
+                (a (@ (href ,(post-uri post)))
+                   ,(post-ref post 'title))
+                " — "
+                ,(date->string* (post-date post))))
+            sorted-posts))))
+
+(define (archive-page-builder layout)
+  (lambda (site posts)
+    (list (serialized-artifact "archive.html"
+                               (layout site "归档" (archive-content site posts))
+                               sxml->html))))

@@ -1,0 +1,25 @@
+(define-module (pages links)
+  #:use-module (haunt site)
+  #:use-module (haunt artifact)
+  #:use-module (haunt html)
+  #:export (links-page-builder))
+
+(define links-content
+  `((h1 "推荐阅读")
+    (h2 "工具网站")
+    (p (a (@ (href "https://oeis.org/")) "OEIS:在线整数数列数据库"))
+    (p (a (@ (href "http://eel.is/c++draft/")) "C++ draft:C艹最新草案"))
+    (h2 "个人博客")
+    (p (a (@ (href "https://sunicyosen.github.io/")) "Sunic Yosen的博客"))
+    (p (a (@ (href "https://forgotfun.org/")) "佐须之男的博客"))
+    (p (a (@ (href "https://lado.me/")) "啦哆咪"))
+    (p (a (@ (href "https://www.21xrx.com/")) "21技术"))
+    (p (a (@ (href "https://moonvy.com/blog/")) "Moonvy月球背面"))
+    (h2 "有趣的文章")
+    (p (a (@ (href "https://blog.qiaohewei.cc/2023/06/14/diy-home-server-cloud-center/")) "自制DIY家庭网络服务器机柜"))))
+
+(define (links-page-builder layout)
+  (lambda (site posts)
+    (list (serialized-artifact "links.html"
+                               (layout site "推荐阅读" links-content)
+                               sxml->html))))
