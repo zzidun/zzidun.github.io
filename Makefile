@@ -21,6 +21,6 @@ serve:
 	cd haunt && $(RUN) haunt serve
 
 publish: build
-	git add -A docs posts haunt manifest.scm Makefile
+	git add -A
 	git diff --cached --quiet || git commit -m "$(MSG)"
 	git push
