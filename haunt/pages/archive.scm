@@ -5,6 +5,7 @@
   #:use-module (haunt html)
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-19)
+  #:use-module (pages tags-common)
   #:export (archive-page-builder))
 
 (define (date->string* date)
@@ -12,7 +13,7 @@
 
 (define (archive-content site posts)
   (define sorted-posts (posts/reverse-chronological posts))
-  (define all-tags (delete-duplicates (apply append (map post-tags posts))))
+  (define tags (all-tags posts))
   (define (post-uri post)
     (string-append "/" (site-post-slug site post) ".html"))
   (define (tag-uri tag)
@@ -29,7 +30,7 @@
     (p "共 " ,(number->string (length posts)) " 篇文章")
     (h2 "标签")
     (p (@ (style "line-height: 2;"))
-       ,@(tag-links all-tags))
+       ,@(tag-links tags))
     (h2 "文章列表")
     (ul
      ,@(map (lambda (post)

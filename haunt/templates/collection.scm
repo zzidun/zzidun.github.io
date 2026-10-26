@@ -7,21 +7,23 @@
 
 (define (date->string* date)
   "Convert DATE to human readable string."
-  (date->string date "~Y年~m月~d日 ~H:~M:~S"))
+  (date->string date "~Y年~m月~d日"))
 
+;; 一个 collection 就是一页“按条件聚合的文章列表”，目前用于标签页。
 (define (zzidun-collection-template site title posts prefix)
   (define (post-uri post)
     (string-append (or prefix "") "/"
                    (site-post-slug site post) ".html"))
 
-  `((h2 ,title)
+  `((h1 ,title)
+    (p "共 " ,(number->string (length posts)) " 篇文章")
     (ul
      ,@(map (lambda (post)
               `(li
                 (a (@ (href ,(post-uri post)))
-                   ,(post-ref post 'title)
-                   " — "
-                   ,(date->string* (post-date post)))))
+                   ,(post-ref post 'title))
+                " — "
+                ,(date->string* (post-date post))))
             posts))))
 
 (define (zzidun-pagination-template site body previous-page next-page)

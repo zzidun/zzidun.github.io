@@ -5,6 +5,7 @@
   #:use-module (sxml simple)
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-19)
+  #:use-module (pages tags-common)
   #:export (sitemap-builder))
 
 (define (date->sitemap-date date)
@@ -14,7 +15,7 @@
   (define domain (site-domain site))
   (define base-url (string-append "https://" domain))
   (define sorted-posts (posts/reverse-chronological posts))
-  (define all-tags (delete-duplicates (apply append (map post-tags sorted-posts))))
+  (define tags (all-tags sorted-posts))
   (define (post-url post)
     (string-append base-url "/" (site-post-slug site post) ".html"))
   (define (tag-url tag)
@@ -27,7 +28,7 @@
               (string-append base-url "/archive.html")))
    (map (lambda (tag)
           `(url (loc ,(tag-url tag))))
-        all-tags)
+        tags)
    (map (lambda (post)
           `(url
             (loc ,(post-url post))
