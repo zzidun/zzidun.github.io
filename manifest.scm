@@ -9,4 +9,5 @@
 
 (specifications->manifest
  '("guile"
-   "haunt"))
+   "haunt"
+   "pandoc"))

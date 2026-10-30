@@ -9,6 +9,7 @@
              (haunt builder assets)
              (haunt reader skribe)
              (haunt reader commonmark)
+             (reader latex)
              (srfi srfi-1)
              (theme)
              (templates layout)
@@ -24,7 +25,8 @@
 
 (define (post-file? filename)
   (or (string-suffix? ".md" filename)
-      (string-suffix? ".skr" filename)))
+      (string-suffix? ".skr" filename)
+      (string-suffix? ".tex" filename)))
 
 (define (my-static-directory directory dest)
   (lambda (site posts)
@@ -65,7 +67,7 @@
       #:posts-directory "../posts"
       #:build-directory "../docs"
       #:file-filter post-file?
-      #:readers (list skribe-reader commonmark-reader)
+      #:readers (list skribe-reader commonmark-reader (latex-reader))
       #:builders (list (blog-with-tag-collections zzidun-theme)
                        (atom-feed)
                        (atom-feeds-by-tag)

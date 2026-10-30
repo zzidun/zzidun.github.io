@@ -1,5 +1,6 @@
 (define-module (templates post)
   #:use-module (haunt post)
+  #:use-module (srfi srfi-13)
   #:use-module (srfi srfi-19)
   #:export (zzidun-post-template
             date->string*))
@@ -17,6 +18,21 @@
          ((null? (cdr tags)) (reverse (cons `(a (@ (href ,(string-append "/tags/" (car tags) ".html"))) ,(car tags)) result)))
          (else (loop (cdr tags) (cons " · " (cons `(a (@ (href ,(string-append "/tags/" (car tags) ".html"))) ,(car tags)) result))))))))
 
+(define (sxml-contains-string? sxml needle)
+  "Return #t if any string inside SXML contains NEEDLE."
+  (cond
+   ((string? sxml) (string-contains sxml needle))
+   ((pair? sxml)
+    (or (sxml-contains-string? (car sxml) needle)
+        (sxml-contains-string? (cdr sxml) needle)))
+   (else #f)))
+
+;; pandoc 输出的公式是 \(...\) / \[...\]，只有这类文章才需要加载 MathJax。
+(define (math-in-post? post)
+  (let ((sxml (post-sxml post)))
+    (or (sxml-contains-string? sxml "\\(")
+        (sxml-contains-string? sxml "\\["))))
+
 (define (zzidun-post-template post)
   `((h1 ,(post-ref post 'title))
     (p (@ (style "font-size: 0.9em; color: #666;"))
@@ -24,6 +40,11 @@
        "  |  时间: " ,(date->string* (post-date post))
        "  |  标签: " ,@(tag-links (post-tags post)))
     (div ,(post-sxml post))
+    ,@(if (math-in-post? post)
+          (list `(script (@ (src "/assets/js/tex-svg.min.js")
+                            (defer "defer"))
+                         ""))
+          '())
     (script (@ (src "https://giscus.app/client.js")
                (data-repo "zzidun/zzidun.github.io")
                (data-repo-id "R_kgDOGlKwHw")
